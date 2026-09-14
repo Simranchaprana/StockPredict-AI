@@ -44,7 +44,6 @@ Retail investors and students often need to check multiple platforms to view his
 - 🏆 **Model comparison** — Logistic Regression vs. Random Forest vs. XGBoost, with accuracy/precision/recall/F1/ROC-AUC reported side by side
 - 🕰️ **Prediction history** — logs past predictions vs. actual outcomes for transparency
 - 💰 **Backtesting module** — simulates a simple UP-signal strategy against a fixed starting capital, reported alongside buy-and-hold for honest comparison
-- 📈 **Multi-stock comparison** — normalized returns across tickers
 
 ---
 
@@ -53,7 +52,7 @@ Retail investors and students often need to check multiple platforms to view his
 | Layer | Technology |
 |---|---|
 | Frontend | React.js + Tailwind CSS |
-| Charts | Plotly.js / Recharts |
+| Charts | Recharts |
 | Backend | FastAPI (Python) |
 | ML Framework | Scikit-learn, XGBoost (optional) |
 | Data Source | `yfinance` (Yahoo Finance) |

@@ -35,8 +35,8 @@ def train_models(symbol="RELIANCE.NS"):
     rf_classifier = RandomForestClassifier(n_estimators=100, max_depth=10, random_state=42)
     rf_regressor = RandomForestRegressor(n_estimators=100, max_depth=10, random_state=42)
     
-    lr_metrics = {'acc': [], 'prec': [], 'rec': [], 'f1': []}
-    rf_metrics = {'acc': [], 'prec': [], 'rec': [], 'f1': []}
+    lr_metrics = {'acc': [], 'prec': [], 'rec': [], 'f1': [], 'roc': []}
+    rf_metrics = {'acc': [], 'prec': [], 'rec': [], 'f1': [], 'roc': []}
     reg_metrics = {'mae': [], 'r2': []}
     
     for train_index, test_index in tscv.split(X):
@@ -47,18 +47,28 @@ def train_models(symbol="RELIANCE.NS"):
         # Logistic Regression
         lr.fit(X_train, y_train_c)
         lr_preds = lr.predict(X_test)
+        lr_probs = lr.predict_proba(X_test)[:, 1]
         lr_metrics['acc'].append(accuracy_score(y_test_c, lr_preds))
         lr_metrics['prec'].append(precision_score(y_test_c, lr_preds, zero_division=0))
         lr_metrics['rec'].append(recall_score(y_test_c, lr_preds, zero_division=0))
         lr_metrics['f1'].append(f1_score(y_test_c, lr_preds, zero_division=0))
+        try:
+            lr_metrics['roc'].append(roc_auc_score(y_test_c, lr_probs))
+        except ValueError:
+            pass
             
         # Random Forest Classifier
         rf_classifier.fit(X_train, y_train_c)
         rf_preds = rf_classifier.predict(X_test)
+        rf_probs = rf_classifier.predict_proba(X_test)[:, 1]
         rf_metrics['acc'].append(accuracy_score(y_test_c, rf_preds))
         rf_metrics['prec'].append(precision_score(y_test_c, rf_preds, zero_division=0))
         rf_metrics['rec'].append(recall_score(y_test_c, rf_preds, zero_division=0))
         rf_metrics['f1'].append(f1_score(y_test_c, rf_preds, zero_division=0))
+        try:
+            rf_metrics['roc'].append(roc_auc_score(y_test_c, rf_probs))
+        except ValueError:
+            pass
         
         # Random Forest Regressor
         rf_regressor.fit(X_train, y_train_r)
@@ -98,12 +108,14 @@ def train_models(symbol="RELIANCE.NS"):
             "precision": np.mean(rf_metrics['prec']),
             "recall": np.mean(rf_metrics['rec']),
             "f1": np.mean(rf_metrics['f1']),
+            "roc_auc": np.mean(rf_metrics['roc']) if rf_metrics['roc'] else 0.5,
         },
         "Logistic Regression": {
             "accuracy": np.mean(lr_metrics['acc']),
             "precision": np.mean(lr_metrics['prec']),
             "recall": np.mean(lr_metrics['rec']),
             "f1": np.mean(lr_metrics['f1']),
+            "roc_auc": np.mean(lr_metrics['roc']) if lr_metrics['roc'] else 0.5,
         },
         "Regressor": {
             "mae": np.mean(reg_metrics['mae']),

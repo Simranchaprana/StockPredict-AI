@@ -9,6 +9,7 @@ const API_BASE = 'http://localhost:8000/api';
 
 export default function Dashboard() {
   const [symbol, setSymbol] = useState('RELIANCE.NS');
+  const [chartPeriod, setChartPeriod] = useState('1y');
   const [stockInfo, setStockInfo] = useState(null);
   const [history, setHistory] = useState([]);
   const [indicators, setIndicators] = useState(null);
@@ -18,7 +19,7 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const fetchStockData = async (sym) => {
+  const fetchStockData = async (sym, period = chartPeriod) => {
     setLoading(true);
     setError(null);
     try {
@@ -27,7 +28,7 @@ export default function Dashboard() {
       setStockInfo(infoRes.data);
 
       // Fetch history for chart
-      const histRes = await axios.get(`${API_BASE}/history/${sym}?period=1y`);
+      const histRes = await axios.get(`${API_BASE}/history/${sym}?period=${period}`);
       setHistory(histRes.data);
 
       // Fetch indicators
@@ -66,12 +67,17 @@ export default function Dashboard() {
   };
 
   useEffect(() => {
-    fetchStockData(symbol);
+    fetchStockData(symbol, chartPeriod);
   }, []);
 
   const handleSearch = (newSymbol) => {
     setSymbol(newSymbol);
-    fetchStockData(newSymbol);
+    fetchStockData(newSymbol, chartPeriod);
+  };
+
+  const handlePeriodChange = (period) => {
+    setChartPeriod(period);
+    fetchStockData(symbol, period);
   };
 
   return (
@@ -116,7 +122,20 @@ export default function Dashboard() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="lg:col-span-2 space-y-6">
               <div className="bg-white p-6 rounded-lg shadow border border-gray-100">
-                <h3 className="text-lg font-medium mb-4 text-gray-900">Price History (1 Year)</h3>
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-lg font-medium text-gray-900">Price History</h3>
+                  <div className="flex space-x-2">
+                    {['1mo', '3mo', '6mo', '1y', '5y'].map(p => (
+                      <button
+                        key={p}
+                        onClick={() => handlePeriodChange(p)}
+                        className={`px-3 py-1 text-xs font-medium rounded ${chartPeriod === p ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
+                      >
+                        {p.toUpperCase()}
+                      </button>
+                    ))}
+                  </div>
+                </div>
                 <PriceChart data={history} />
               </div>
               
@@ -138,6 +157,7 @@ export default function Dashboard() {
                         <div className="flex justify-between text-xs"><span className="text-gray-500">Prec</span><span className="font-medium">{performance['Random Forest'].precision.toFixed(2)}</span></div>
                         <div className="flex justify-between text-xs"><span className="text-gray-500">Rec</span><span className="font-medium">{performance['Random Forest'].recall.toFixed(2)}</span></div>
                         <div className="flex justify-between text-xs"><span className="text-gray-500">F1</span><span className="font-medium">{performance['Random Forest'].f1.toFixed(2)}</span></div>
+                        <div className="flex justify-between text-xs"><span className="text-gray-500">ROC-AUC</span><span className="font-medium">{performance['Random Forest'].roc_auc.toFixed(2)}</span></div>
                       </div>
                     </div>
                     <div>
@@ -147,7 +167,22 @@ export default function Dashboard() {
                         <div className="flex justify-between text-xs"><span className="text-gray-500">Prec</span><span className="font-medium">{performance['Logistic Regression'].precision.toFixed(2)}</span></div>
                         <div className="flex justify-between text-xs"><span className="text-gray-500">Rec</span><span className="font-medium">{performance['Logistic Regression'].recall.toFixed(2)}</span></div>
                         <div className="flex justify-between text-xs"><span className="text-gray-500">F1</span><span className="font-medium">{performance['Logistic Regression'].f1.toFixed(2)}</span></div>
+                        <div className="flex justify-between text-xs"><span className="text-gray-500">ROC-AUC</span><span className="font-medium">{performance['Logistic Regression'].roc_auc.toFixed(2)}</span></div>
                       </div>
+                    </div>
+                  </div>
+
+                  <hr className="my-4 border-gray-200" />
+                  
+                  <h4 className="text-sm font-medium text-gray-900 mb-2">Price Regressor</h4>
+                  <div className="space-y-2 mb-4">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-600">MAE</span>
+                      <span className="font-medium">₹{performance.Regressor.mae.toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-600">R² Score</span>
+                      <span className="font-medium">{performance.Regressor.r2.toFixed(3)}</span>
                     </div>
                   </div>
 
