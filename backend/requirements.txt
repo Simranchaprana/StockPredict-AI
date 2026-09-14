@@ -7,3 +7,5 @@ scikit-learn
 sqlalchemy
 joblib
 python-multipart
+pytest
+httpx
