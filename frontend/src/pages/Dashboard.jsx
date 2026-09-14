@@ -157,7 +157,7 @@ export default function Dashboard() {
                         <div className="flex justify-between text-xs"><span className="text-gray-500">Prec</span><span className="font-medium">{performance['Random Forest'].precision.toFixed(2)}</span></div>
                         <div className="flex justify-between text-xs"><span className="text-gray-500">Rec</span><span className="font-medium">{performance['Random Forest'].recall.toFixed(2)}</span></div>
                         <div className="flex justify-between text-xs"><span className="text-gray-500">F1</span><span className="font-medium">{performance['Random Forest'].f1.toFixed(2)}</span></div>
-                        <div className="flex justify-between text-xs"><span className="text-gray-500">ROC-AUC</span><span className="font-medium">{performance['Random Forest'].roc_auc.toFixed(2)}</span></div>
+                        <div className="flex justify-between text-xs"><span className="text-gray-500">ROC-AUC</span><span className="font-medium">{performance['Random Forest'].roc_auc ? performance['Random Forest'].roc_auc.toFixed(2) : 'N/A'}</span></div>
                       </div>
                     </div>
                     <div>
@@ -167,7 +167,8 @@ export default function Dashboard() {
                         <div className="flex justify-between text-xs"><span className="text-gray-500">Prec</span><span className="font-medium">{performance['Logistic Regression'].precision.toFixed(2)}</span></div>
                         <div className="flex justify-between text-xs"><span className="text-gray-500">Rec</span><span className="font-medium">{performance['Logistic Regression'].recall.toFixed(2)}</span></div>
                         <div className="flex justify-between text-xs"><span className="text-gray-500">F1</span><span className="font-medium">{performance['Logistic Regression'].f1.toFixed(2)}</span></div>
-                        <div className="flex justify-between text-xs"><span className="text-gray-500">ROC-AUC</span><span className="font-medium">{performance['Logistic Regression'].roc_auc.toFixed(2)}</span></div>
+                        <div className="flex justify-between text-xs"><span className="text-gray-500">ROC-AUC</span><span className="font-medium">{performance['Logistic Regression'].roc_auc ? performance['Logistic Regression'].roc_auc.toFixed(2) : 'N/A'}</span></div>
+
                       </div>
                     </div>
                   </div>
