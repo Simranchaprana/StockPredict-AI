@@ -105,10 +105,12 @@ export default function Dashboard() {
       ) : (
         <div className="space-y-6">
           {stockInfo && (
-            <div className="bg-white p-6 rounded-lg shadow border border-gray-100 flex flex-col sm:flex-row justify-between items-center">
+            <div className="bg-white p-6 rounded-lg shadow mb-6 border border-gray-100 flex justify-between items-center">
               <div>
-                <h2 className="text-3xl font-bold text-gray-900">{stockInfo.symbol}</h2>
-                <p className="text-gray-500 text-sm mt-1">Latest Market Data</p>
+                <h2 className="text-2xl font-bold text-gray-900">{stockInfo.symbol}</h2>
+                <p className="text-gray-500 text-sm mt-1">
+                  Data as of: <span className="font-semibold">{stockInfo.date}</span> • Volume: {stockInfo.volume.toLocaleString()}
+                </p>
               </div>
               <div className="mt-4 sm:mt-0 text-right">
                 <div className="text-3xl font-bold">₹{stockInfo.price.toFixed(2)}</div>

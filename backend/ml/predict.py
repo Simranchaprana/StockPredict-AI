@@ -44,12 +44,20 @@ def predict_next_day(symbol: str):
     # Use the ML Regressor for price prediction
     predicted_price = regressor.predict(latest_features)[0]
     
+    latest_date_dt = latest_features.index[0]
+    latest_date_str = latest_date_dt.strftime('%Y-%m-%d')
+    # Simple next day approximation (adds 1 day, or 3 if Friday)
+    days_to_add = 3 if latest_date_dt.weekday() == 4 else 1
+    target_date_str = (latest_date_dt + pd.Timedelta(days=days_to_add)).strftime('%Y-%m-%d')
+
     return {
         "symbol": symbol,
         "prediction": direction,
         "predicted_price": round(predicted_price, 2),
         "confidence": round(confidence, 2),
-        "model": "Random Forest ML"
+        "model": "Random Forest ML",
+        "latest_data_date": latest_date_str,
+        "target_date": target_date_str
     }
     
 def get_model_metrics(symbol: str):

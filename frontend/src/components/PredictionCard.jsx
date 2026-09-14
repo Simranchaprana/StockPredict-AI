@@ -26,7 +26,7 @@ export default function PredictionCard({ prediction }) {
           Next-Day Prediction (AI Model)
         </h3>
         <p className="text-sm text-gray-500 mb-6">
-          Based on {prediction.model} algorithm analyzing historical OHLCV data and indicators.
+          Predicting for <span className="font-bold text-gray-800">{prediction.target_date}</span> based on {prediction.latest_data_date} data.
         </p>
         
         <div className="flex items-center justify-between mb-4">

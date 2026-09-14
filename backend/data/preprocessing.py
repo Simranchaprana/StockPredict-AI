@@ -48,5 +48,6 @@ def get_latest_price(symbol: str):
         "price": latest['Close'],
         "change": change,
         "pct_change": pct_change,
-        "volume": latest['Volume']
+        "volume": latest['Volume'],
+        "date": df.index[-1].strftime('%Y-%m-%d')
     }
