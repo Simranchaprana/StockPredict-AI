@@ -6,56 +6,54 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from data.preprocessing import fetch_stock_data
 from ml.features import prepare_features, FEATURE_COLS
+from ml.train import train_models
 
 MODEL_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "models")
-MODEL_PATH = os.path.join(MODEL_DIR, "random_forest.pkl")
 
 def predict_next_day(symbol: str):
-    if not os.path.exists(MODEL_PATH):
-        raise FileNotFoundError("Model not found. Please train the model first.")
-        
-    model = joblib.load(MODEL_PATH)
+    classifier_path = os.path.join(MODEL_DIR, f"rf_classifier_{symbol}.pkl")
+    regressor_path = os.path.join(MODEL_DIR, f"rf_regressor_{symbol}.pkl")
     
-    # We only need enough history to calculate rolling features (200 days for SMA_200)
+    # Auto-train if models for this symbol don't exist
+    if not os.path.exists(classifier_path) or not os.path.exists(regressor_path):
+        try:
+            train_models(symbol)
+        except Exception as e:
+            return {"error": f"Failed to train model for {symbol}: {str(e)}"}
+            
+    classifier = joblib.load(classifier_path)
+    regressor = joblib.load(regressor_path)
+    
     df = fetch_stock_data(symbol, period="1y")
     if df.empty:
-        return None
+        return {"error": f"No data found for {symbol}"}
         
     df = prepare_features(df)
     
-    # The last row represents today's data, predicting tomorrow.
-    # Target and Next_Close will be NaN for this row, which is expected.
     latest_features = df[FEATURE_COLS].iloc[-1:]
     
     if latest_features.isnull().values.any():
-        # Maybe the stock doesn't have 200 days of history
         return {"error": "Not enough historical data to compute technical indicators."}
         
-    prediction = model.predict(latest_features)[0]
-    probabilities = model.predict_proba(latest_features)[0]
-    
+    prediction = classifier.predict(latest_features)[0]
+    probabilities = classifier.predict_proba(latest_features)[0]
     confidence = probabilities[prediction]
     
     direction = "UP" if prediction == 1 else "DOWN"
     
-    # A simple linear approximation for price prediction (optional based on direction)
-    latest_price = df['Close'].iloc[-1]
-    volatility = df['Volatility'].iloc[-1]
-    
-    # Basic estimate: +/- volatility
-    price_change_est = latest_price * volatility
-    predicted_price = latest_price + price_change_est if direction == "UP" else latest_price - price_change_est
+    # Use the ML Regressor for price prediction
+    predicted_price = regressor.predict(latest_features)[0]
     
     return {
         "symbol": symbol,
         "prediction": direction,
         "predicted_price": round(predicted_price, 2),
         "confidence": round(confidence, 2),
-        "model": "Random Forest"
+        "model": "Random Forest ML"
     }
     
-def get_model_metrics():
-    metrics_path = os.path.join(MODEL_DIR, "metrics.joblib")
+def get_model_metrics(symbol: str):
+    metrics_path = os.path.join(MODEL_DIR, f"metrics_{symbol}.joblib")
     if os.path.exists(metrics_path):
         return joblib.load(metrics_path)
     return None

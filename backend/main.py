@@ -8,8 +8,21 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from data.preprocessing import get_latest_price, fetch_stock_data
 from ml.features import prepare_features
 from ml.predict import predict_next_day, get_model_metrics
+from database import models
+from database.database import engine, SessionLocal
+from fastapi import Depends
+from sqlalchemy.orm import Session
+
+models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="Stock Prediction API")
+
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
 
 # Configure CORS for React frontend
 app.add_middleware(
@@ -73,20 +86,37 @@ def get_stock_indicators(symbol: str):
     }
 
 @app.get("/api/predict/{symbol}")
-def get_prediction(symbol: str):
+def get_prediction(symbol: str, db: Session = Depends(get_db)):
     try:
         prediction = predict_next_day(symbol)
         if not prediction:
             raise HTTPException(status_code=404, detail="Could not generate prediction")
         if "error" in prediction:
             raise HTTPException(status_code=400, detail=prediction["error"])
+            
+        # Log to DB
+        log_entry = models.PredictionLog(
+            symbol=symbol,
+            prediction_direction=prediction['prediction'],
+            confidence=prediction['confidence'],
+            predicted_price=prediction['predicted_price'],
+            model=prediction['model']
+        )
+        db.add(log_entry)
+        db.commit()
+            
         return prediction
     except FileNotFoundError:
         raise HTTPException(status_code=500, detail="Model not trained yet")
 
-@app.get("/api/performance")
-def get_performance():
-    metrics = get_model_metrics()
+@app.get("/api/performance/{symbol}")
+def get_performance(symbol: str):
+    metrics = get_model_metrics(symbol)
     if not metrics:
         raise HTTPException(status_code=404, detail="Metrics not found. Train the model first.")
     return metrics
+
+@app.get("/api/history_logs/{symbol}")
+def get_history_logs(symbol: str, db: Session = Depends(get_db)):
+    logs = db.query(models.PredictionLog).filter(models.PredictionLog.symbol == symbol).order_by(models.PredictionLog.date.desc()).limit(10).all()
+    return logs
