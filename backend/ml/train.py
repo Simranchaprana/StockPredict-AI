@@ -31,9 +31,25 @@ def train_models(symbol="RELIANCE.NS"):
     
     tscv = TimeSeriesSplit(n_splits=5)
     
-    lr = LogisticRegression(max_iter=1000)
-    rf_classifier = RandomForestClassifier(n_estimators=100, max_depth=10, random_state=42)
-    rf_regressor = RandomForestRegressor(n_estimators=100, max_depth=10, random_state=42)
+    from sklearn.pipeline import make_pipeline
+    from sklearn.preprocessing import StandardScaler
+    
+    # Tuning Logistic Regression with Scaler and Balanced weights
+    lr = make_pipeline(StandardScaler(), LogisticRegression(max_iter=1000, class_weight='balanced'))
+    
+    # Tuning Random Forest with better hyperparameters to reduce overfitting and improve edge
+    rf_classifier = RandomForestClassifier(
+        n_estimators=200, 
+        max_depth=15, 
+        min_samples_split=10, 
+        min_samples_leaf=5,
+        random_state=42
+    )
+    rf_regressor = RandomForestRegressor(
+        n_estimators=100, 
+        max_depth=10, 
+        random_state=42
+    )
     
     lr_metrics = {'acc': [], 'prec': [], 'rec': [], 'f1': [], 'roc': []}
     rf_metrics = {'acc': [], 'prec': [], 'rec': [], 'f1': [], 'roc': []}
@@ -92,7 +108,13 @@ def train_models(symbol="RELIANCE.NS"):
     X_test_backtest = X.iloc[last_test_idx]
     y_test_backtest_actual_returns = train_df.iloc[last_test_idx]['Daily_Return']
     
-    rf_classifier_backtest = RandomForestClassifier(n_estimators=100, max_depth=10, random_state=42)
+    rf_classifier_backtest = RandomForestClassifier(
+        n_estimators=200, 
+        max_depth=15, 
+        min_samples_split=10, 
+        min_samples_leaf=5,
+        random_state=42
+    )
     rf_classifier_backtest.fit(X.iloc[last_train_idx], y_class.iloc[last_train_idx])
     signals = rf_classifier_backtest.predict(X_test_backtest)
     
