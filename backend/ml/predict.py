@@ -50,7 +50,7 @@ def predict_next_day(symbol: str):
     target_date_str = (latest_date_dt + pd.Timedelta(days=days_to_add)).strftime('%Y-%m-%d')
 
     # Direction/Price Consistency Check
-    current_price = df_features['Close'].iloc[-1]
+    current_price = df['Close'].iloc[-1]
     price_implied_direction = "UP" if predicted_price > current_price else "DOWN"
     models_agree = (direction == price_implied_direction)
     
