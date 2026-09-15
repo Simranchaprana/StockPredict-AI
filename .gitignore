@@ -10,6 +10,9 @@ __pycache__/
 venv/
 env/
 .pytest_cache/
+*.pkl
+*.joblib
+*.db
 
 # OS
 .DS_Store

@@ -2,10 +2,10 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import StockSearch from '../components/StockSearch';
 import PriceChart from '../components/PriceChart';
-import IndicatorCard from '../components/IndicatorCard';
 import PredictionCard from '../components/PredictionCard';
+import IndicatorCard from '../components/IndicatorCard';
 
-const API_BASE = 'http://localhost:8000/api';
+const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api';
 
 export default function Dashboard() {
   const [symbol, setSymbol] = useState('RELIANCE.NS');
