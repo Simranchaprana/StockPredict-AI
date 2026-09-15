@@ -93,14 +93,17 @@ def train_models(symbol="RELIANCE.NS"):
         reg_metrics['r2'].append(r2_score(y_test_r, reg_preds))
     
     # Train final models on all data
-    rf_classifier.fit(X, y_class)
+    from sklearn.calibration import CalibratedClassifierCV, calibration_curve
+    calibrated_rf = CalibratedClassifierCV(rf_classifier, method="isotonic", cv=tscv)
+    calibrated_rf.fit(X, y_class)
+    
     rf_regressor.fit(X, y_reg)
     lr.fit(X, y_class)
     
     os.makedirs(MODEL_DIR, exist_ok=True)
     
     # Save models per symbol
-    joblib.dump(rf_classifier, os.path.join(MODEL_DIR, f"rf_classifier_{symbol}.pkl"))
+    joblib.dump(calibrated_rf, os.path.join(MODEL_DIR, f"rf_classifier_{symbol}.pkl"))
     joblib.dump(rf_regressor, os.path.join(MODEL_DIR, f"rf_regressor_{symbol}.pkl"))
     
     # Backtest simulation
@@ -118,11 +121,31 @@ def train_models(symbol="RELIANCE.NS"):
     rf_classifier_backtest.fit(X.iloc[last_train_idx], y_class.iloc[last_train_idx])
     signals = rf_classifier_backtest.predict(X_test_backtest)
     
-    initial_capital = 100000
-    cumulative_market_return = (1 + y_test_backtest_actual_returns).prod()
+    # Equity curve calculations
+    from ml.metrics import backtest_summary
     
-    strategy_returns = y_test_backtest_actual_returns * signals
-    cumulative_strategy_return = (1 + strategy_returns).prod()
+    initial_capital = 100000
+    equity_curve_bh = [initial_capital]
+    equity_curve_strategy = [initial_capital]
+    
+    daily_returns_bh = []
+    daily_returns_strategy = []
+    
+    for i, signal in enumerate(signals):
+        ret = y_test_backtest_actual_returns.iloc[i]
+        
+        # Buy and Hold
+        bh_ret = ret
+        daily_returns_bh.append(bh_ret)
+        equity_curve_bh.append(equity_curve_bh[-1] * (1 + bh_ret))
+        
+        # Strategy (UP only)
+        strat_ret = ret if signal == 1 else 0
+        daily_returns_strategy.append(strat_ret)
+        equity_curve_strategy.append(equity_curve_strategy[-1] * (1 + strat_ret))
+        
+    bh_summary = backtest_summary(np.array(equity_curve_bh), np.array(daily_returns_bh))
+    strat_summary = backtest_summary(np.array(equity_curve_strategy), np.array(daily_returns_strategy))
     
     metrics = {
         "Random Forest": {
@@ -144,8 +167,13 @@ def train_models(symbol="RELIANCE.NS"):
             "r2": np.mean(reg_metrics['r2']),
         },
         "Backtest": {
-            "buy_and_hold_return": (cumulative_market_return - 1) * 100,
-            "strategy_return": (cumulative_strategy_return - 1) * 100
+            "buy_and_hold_return": bh_summary['final_return_pct'],
+            "buy_and_hold_sharpe": bh_summary['sharpe'],
+            "buy_and_hold_max_dd": bh_summary['max_drawdown'],
+            "strategy_return": strat_summary['final_return_pct'],
+            "strategy_sharpe": strat_summary['sharpe'],
+            "strategy_max_dd": strat_summary['max_drawdown'],
+            "strategy_win_rate": strat_summary['win_rate']
         }
     }
     

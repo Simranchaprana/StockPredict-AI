@@ -45,7 +45,7 @@ export default function PredictionCard({ prediction }) {
           </div>
         </div>
 
-        <div>
+        <div className="mb-4">
           <div className="flex justify-between items-center mb-1">
             <span className="text-sm font-medium text-gray-700">Confidence Score</span>
             <span className="text-sm font-medium text-gray-900">{confidencePct}%</span>
@@ -56,10 +56,31 @@ export default function PredictionCard({ prediction }) {
               style={{ width: `${confidencePct}%` }}
             ></div>
           </div>
-          <p className="mt-2 text-xs text-gray-500 text-center">
-            Predictions do not constitute financial advice.
-          </p>
         </div>
+
+        {prediction.predicted_price && (
+          <div className="mt-4 pt-4 border-t border-gray-100 flex justify-between items-center">
+            {prediction.models_agree ? (
+              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                Models Agree (Price supports Direction)
+              </span>
+            ) : (
+              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                Models Disagree
+              </span>
+            )}
+          </div>
+        )}
+        
+        {!prediction.models_agree && prediction.warning && (
+          <div className="mt-3 text-xs text-yellow-700 bg-yellow-50 p-2 rounded">
+            {prediction.warning}
+          </div>
+        )}
+
+        <p className="mt-4 text-xs text-gray-500 text-center">
+          Predictions do not constitute financial advice.
+        </p>
       </div>
     </div>
   );

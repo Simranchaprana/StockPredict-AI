@@ -194,12 +194,35 @@ export default function Dashboard() {
                   <h4 className="text-sm font-medium text-gray-900 mb-2">Backtest Result (1-Fold)</h4>
                   <div className="space-y-2">
                     <div className="flex justify-between text-sm">
-                      <span className="text-gray-600">Buy & Hold Return</span>
-                      <span className="font-medium text-blue-600">{performance.Backtest.buy_and_hold_return.toFixed(1)}%</span>
+                      <span className="text-gray-600 font-semibold">Strategy Return</span>
+                      <span className="font-bold text-green-600">{performance.Backtest.strategy_return?.toFixed(1)}%</span>
                     </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-600">Strategy Return</span>
-                      <span className="font-medium text-green-600">{performance.Backtest.strategy_return.toFixed(1)}%</span>
+                    <div className="flex justify-between text-xs">
+                      <span className="text-gray-500">Sharpe Ratio</span>
+                      <span className="font-medium text-gray-700">{performance.Backtest.strategy_sharpe?.toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between text-xs">
+                      <span className="text-gray-500">Max Drawdown</span>
+                      <span className="font-medium text-red-600">{performance.Backtest.strategy_max_dd?.toFixed(1)}%</span>
+                    </div>
+                    <div className="flex justify-between text-xs">
+                      <span className="text-gray-500">Win Rate</span>
+                      <span className="font-medium text-gray-700">{performance.Backtest.strategy_win_rate?.toFixed(1)}%</span>
+                    </div>
+                    
+                    <div className="mt-3 pt-3 border-t border-gray-100">
+                      <div className="flex justify-between text-sm mb-1">
+                        <span className="text-gray-600 font-semibold">Buy & Hold Return</span>
+                        <span className="font-bold text-blue-600">{performance.Backtest.buy_and_hold_return?.toFixed(1)}%</span>
+                      </div>
+                      <div className="flex justify-between text-xs">
+                        <span className="text-gray-500">Sharpe Ratio</span>
+                        <span className="font-medium text-gray-700">{performance.Backtest.buy_and_hold_sharpe?.toFixed(2)}</span>
+                      </div>
+                      <div className="flex justify-between text-xs">
+                        <span className="text-gray-500">Max Drawdown</span>
+                        <span className="font-medium text-red-600">{performance.Backtest.buy_and_hold_max_dd?.toFixed(1)}%</span>
+                      </div>
                     </div>
                   </div>
                 </div>

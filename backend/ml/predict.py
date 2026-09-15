@@ -46,9 +46,17 @@ def predict_next_day(symbol: str):
     
     latest_date_dt = latest_features.index[0]
     latest_date_str = latest_date_dt.strftime('%Y-%m-%d')
-    # Simple next day approximation (adds 1 day, or 3 if Friday)
     days_to_add = 3 if latest_date_dt.weekday() == 4 else 1
     target_date_str = (latest_date_dt + pd.Timedelta(days=days_to_add)).strftime('%Y-%m-%d')
+
+    # Direction/Price Consistency Check
+    current_price = latest_features['Close'].iloc[0]
+    price_implied_direction = "UP" if predicted_price > current_price else "DOWN"
+    models_agree = (direction == price_implied_direction)
+    
+    warning = None
+    if not models_agree:
+        warning = f"Classifier predicts {direction} but Regressor price target (₹{predicted_price:.2f}) implies {price_implied_direction}. Treat with caution."
 
     return {
         "symbol": symbol,
@@ -57,7 +65,9 @@ def predict_next_day(symbol: str):
         "confidence": round(confidence, 2),
         "model": "Random Forest ML",
         "latest_data_date": latest_date_str,
-        "target_date": target_date_str
+        "target_date": target_date_str,
+        "models_agree": models_agree,
+        "warning": warning
     }
     
 def get_model_metrics(symbol: str):
