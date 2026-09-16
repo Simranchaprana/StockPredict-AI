@@ -146,16 +146,16 @@ def train_and_predict_intraday(symbol: str, intervals=["5min", "8min", "10min"])
             
         direction = "UP" if pred_class == 1 else "DOWN"
         
-        # Target time (the next candle)
-        latest_time = latest_features.index[-1]
+        # Target time (exactly X minutes from the raw latest tick)
+        absolute_latest_time = df_1m.index[-1]
         minutes_to_add = int(interval.replace('min', ''))
-        target_time = latest_time + pd.Timedelta(minutes=minutes_to_add)
+        target_time = absolute_latest_time + pd.Timedelta(minutes=minutes_to_add)
         
         predictions[interval] = {
             "prediction": direction,
             "confidence": round(confidence, 2),
             "target_time": target_time.strftime('%H:%M'),
-            "latest_time": latest_time.strftime('%H:%M')
+            "latest_time": absolute_latest_time.strftime('%H:%M')
         }
         
     return predictions
