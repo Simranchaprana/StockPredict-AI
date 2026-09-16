@@ -23,9 +23,11 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const fetchStockData = async (sym, period = chartPeriod) => {
-    setLoading(true);
-    setError(null);
+  const fetchStockData = async (sym, period = chartPeriod, background = false) => {
+    if (!background) {
+      setLoading(true);
+      setError(null);
+    }
     try {
       // Fetch basic info
       const infoRes = await axios.get(`${API_BASE}/stock/${sym}`);
@@ -74,24 +76,33 @@ export default function Dashboard() {
       }
       
     } catch (err) {
-      setError(err.response?.data?.detail || "Failed to fetch stock data.");
+      if (!background) {
+        setError(err.response?.data?.detail || "Failed to fetch stock data.");
+      }
     } finally {
-      setLoading(false);
+      if (!background) {
+        setLoading(false);
+      }
     }
   };
 
   useEffect(() => {
     fetchStockData(symbol, chartPeriod);
-  }, []);
+    
+    // Set up real-time polling every 60 seconds (silent background refresh)
+    const intervalId = setInterval(() => {
+      fetchStockData(symbol, chartPeriod, true);
+    }, 60000);
+    
+    return () => clearInterval(intervalId);
+  }, [symbol, chartPeriod]);
 
   const handleSearch = (newSymbol) => {
     setSymbol(newSymbol);
-    fetchStockData(newSymbol, chartPeriod);
   };
 
   const handlePeriodChange = (period) => {
     setChartPeriod(period);
-    fetchStockData(symbol, period);
   };
 
   return (
