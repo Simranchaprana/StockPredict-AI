@@ -32,7 +32,7 @@ def predict_next_day(symbol: str):
     
     # Helper to generate prediction for a specific row
     def generate_prediction_for_row(row_idx):
-        features = df[FEATURE_COLS].iloc[row_idx:row_idx+1]
+        features = df[FEATURE_COLS].iloc[[row_idx]]
         
         if features.isnull().values.any():
             return None
