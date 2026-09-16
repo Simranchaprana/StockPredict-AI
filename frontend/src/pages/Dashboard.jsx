@@ -10,7 +10,7 @@ const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api
 
 export default function Dashboard() {
   const [symbol, setSymbol] = useState('RELIANCE.NS');
-  const [chartPeriod, setChartPeriod] = useState('5y');
+  const [chartPeriod, setChartPeriod] = useState('1d');
   const [activeTab, setActiveTab] = useState(0);
   const [stockInfo, setStockInfo] = useState(null);
   const [history, setHistory] = useState([]);

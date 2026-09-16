@@ -23,11 +23,10 @@ export default function PriceChart({ data }) {
       ? d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })
       : d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
       
-    // For Tooltip: Show full Date and Time if intraday
     const tooltipDate = d.toLocaleDateString();
     const tooltipTime = isIntraday
       ? d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })
-      : null;
+      : "End of Day (Close)";
 
     return {
       ...item,
@@ -44,17 +43,19 @@ export default function PriceChart({ data }) {
   const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
       const dataPoint = payload[0].payload;
+      const isEOD = dataPoint.tooltipTime === "End of Day (Close)";
+      
       return (
         <div className="bg-white p-3 border border-gray-200 shadow-md rounded-md">
           <p className="text-sm font-semibold text-gray-700 mb-2">
-            {dataPoint.tooltipDate} {dataPoint.tooltipTime && <span className="text-blue-600 font-bold ml-1">{dataPoint.tooltipTime}</span>}
+            {dataPoint.tooltipDate} <span className="text-blue-600 font-bold ml-1">{dataPoint.tooltipTime}</span>
           </p>
           <div className="space-y-1">
             <p className="text-sm text-gray-600">
               Opening Rate: <span className="font-medium text-gray-900">₹{dataPoint.open?.toFixed(2)}</span>
             </p>
             <p className="text-sm text-blue-600 font-semibold">
-              {dataPoint.tooltipTime ? `Timely Rate:` : `Closing Rate:`} <span className="font-bold">₹{dataPoint.close?.toFixed(2)}</span>
+              {isEOD ? `Closing Rate:` : `Timely Rate:`} <span className="font-bold">₹{dataPoint.close?.toFixed(2)}</span>
             </p>
           </div>
         </div>
