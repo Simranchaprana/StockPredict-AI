@@ -84,7 +84,7 @@ export default function PriceChart({ data }) {
             stroke="#2563eb" 
             strokeWidth={2}
             dot={false}
-            activeDot={{ r: 6 }}
+            activeDot={false}
           />
         </LineChart>
       </ResponsiveContainer>

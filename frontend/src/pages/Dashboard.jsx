@@ -191,7 +191,7 @@ export default function Dashboard() {
                           <div className={`text-2xl font-black my-1 ${isUp ? 'text-green-600' : 'text-red-600'}`}>
                             {pred.prediction}
                           </div>
-                          <div className={`mt-1 mb-2 inline-block px-2 py-1 rounded text-xs font-bold text-white shadow-sm ${isUp ? 'bg-green-500' : 'bg-red-500'}`}>
+                          <div className={`mt-1 mb-2 text-[13px] font-extrabold ${isUp ? 'text-green-600' : 'text-red-600'}`}>
                             {(pred.confidence * 100).toFixed(1)}% Conf
                           </div>
                           <div className="text-[11px] text-gray-600 font-medium">
