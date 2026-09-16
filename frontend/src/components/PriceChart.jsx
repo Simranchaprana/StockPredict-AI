@@ -11,10 +11,17 @@ export default function PriceChart({ data }) {
   }
 
   // Format the dates for display
-  const chartData = data.map(item => ({
-    ...item,
-    formattedDate: new Date(item.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
-  }));
+  const chartData = data.map(item => {
+    const d = new Date(item.date);
+    const isDaily = item.date.endsWith('00:00:00');
+    return {
+      ...item,
+      formattedDate: isDaily 
+        ? d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
+        : d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) + ' ' + d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' }),
+      tooltipDate: d.toLocaleString()
+    };
+  });
 
   // Calculate min and max for better Y-axis scaling
   const prices = data.flatMap(d => [d.close, d.open].filter(Boolean));
@@ -41,7 +48,7 @@ export default function PriceChart({ data }) {
           <Tooltip 
             labelFormatter={(label, payload) => {
               if (payload && payload.length > 0) {
-                return new Date(payload[0].payload.date).toLocaleDateString();
+                return payload[0].payload.tooltipDate;
               }
               return label;
             }}

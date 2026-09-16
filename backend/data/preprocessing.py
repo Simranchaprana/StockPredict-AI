@@ -9,7 +9,10 @@ def fetch_stock_data(symbol: str, period: str = "5y") -> pd.DataFrame:
     """
     try:
         ticker = yf.Ticker(symbol)
-        df = ticker.history(period=period)
+        if period in ['1d', '5d']:
+            df = ticker.history(period=period, interval="5m")
+        else:
+            df = ticker.history(period=period)
     except Exception as e:
         print(f"yfinance error fetching history for {symbol}: {e}")
         return pd.DataFrame()

@@ -52,7 +52,7 @@ def get_stock_history(symbol: str, period: str = "1y"):
         raise HTTPException(status_code=404, detail="No historical data found")
         
     # Convert datetime index to string format for JSON serialization
-    df.index = df.index.strftime('%Y-%m-%d')
+    df.index = df.index.strftime('%Y-%m-%d %H:%M:%S')
     df_reset = df.reset_index().rename(columns={'Date': 'date', 'Close': 'close', 'Open': 'open', 'High': 'high', 'Low': 'low', 'Volume': 'volume'})
     
     # Fill nan with None for JSON
