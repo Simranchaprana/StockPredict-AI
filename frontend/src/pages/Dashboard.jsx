@@ -178,7 +178,7 @@ export default function Dashboard() {
                     <div className="text-sm text-gray-500 flex justify-between mt-2">
                       <span>High-frequency signals</span>
                       <span className="text-xs font-medium text-gray-600 bg-gray-50 px-2 py-0.5 rounded border border-gray-100">
-                        Valid until {intradayPredictions['10min']?.target_time || intradayPredictions['5min']?.target_time || ''}
+                        {intradayPredictions['5min']?.latest_time || ''}
                       </span>
                     </div>
                   </div>
@@ -189,7 +189,10 @@ export default function Dashboard() {
                       const isUp = pred.prediction === 'UP';
                       return (
                         <div key={interval} className="p-3 rounded-lg flex flex-col items-center justify-between text-center border border-gray-100 bg-white shadow-sm">
-                          <div className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest">{interval}</div>
+                          <div className="flex flex-col items-center mb-1">
+                            <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest">{interval}</span>
+                            <span className="text-[10px] font-medium text-gray-500">Until {pred.target_time}</span>
+                          </div>
                           <div className={`text-xl font-bold my-1 ${isUp ? 'text-green-500' : 'text-red-500'}`}>
                             {pred.prediction}
                           </div>
