@@ -8,6 +8,7 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from data.preprocessing import get_latest_price, fetch_stock_data
 from ml.features import prepare_features
 from ml.predict import predict_next_day, get_model_metrics
+from ml.intraday import train_and_predict_intraday
 from database import models
 from database.database import engine, SessionLocal
 from fastapi import Depends
@@ -110,6 +111,16 @@ def get_prediction(symbol: str, db: Session = Depends(get_db)):
         return prediction_data
     except FileNotFoundError:
         raise HTTPException(status_code=500, detail="Model not trained yet")
+
+@app.get("/api/predict_intraday/{symbol}")
+def get_intraday_prediction(symbol: str):
+    try:
+        predictions = train_and_predict_intraday(symbol)
+        if "error" in predictions:
+            raise HTTPException(status_code=400, detail=predictions["error"])
+        return predictions
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/api/performance/{symbol}")
 def get_performance(symbol: str):

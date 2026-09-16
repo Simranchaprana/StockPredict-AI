@@ -21,6 +21,24 @@ def fetch_stock_data(symbol: str, period: str = "5y") -> pd.DataFrame:
     df = df.sort_index(ascending=True)
     return df
 
+def fetch_intraday_data(symbol: str) -> pd.DataFrame:
+    """
+    Fetches 1-minute tick data for the last 7 days (max allowed by yfinance).
+    """
+    try:
+        ticker = yf.Ticker(symbol)
+        df = ticker.history(period="7d", interval="1m")
+    except Exception as e:
+        print(f"yfinance error fetching intraday history for {symbol}: {e}")
+        return pd.DataFrame()
+    
+    if df.empty:
+        return pd.DataFrame()
+        
+    df = df.dropna(subset=['Close', 'Open', 'High', 'Low', 'Volume'])
+    df = df.sort_index(ascending=True)
+    return df
+
 def get_latest_price(symbol: str):
     try:
         ticker = yf.Ticker(symbol)
