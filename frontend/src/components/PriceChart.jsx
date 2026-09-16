@@ -1,5 +1,5 @@
 import React from 'react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 export default function PriceChart({ data }) {
   if (!data || data.length === 0) {
@@ -17,12 +17,12 @@ export default function PriceChart({ data }) {
   }));
 
   // Calculate min and max for better Y-axis scaling
-  const prices = data.map(d => d.close);
+  const prices = data.flatMap(d => [d.close, d.open].filter(Boolean));
   const min = Math.min(...prices) * 0.95;
   const max = Math.max(...prices) * 1.05;
 
   return (
-    <div className="h-80 w-full">
+    <div className="h-96 w-full mt-4">
       <ResponsiveContainer width="100%" height="100%">
         <LineChart data={chartData} margin={{ top: 5, right: 20, left: 10, bottom: 5 }}>
           <CartesianGrid strokeDasharray="3 3" vertical={false} />
@@ -45,9 +45,20 @@ export default function PriceChart({ data }) {
               }
               return label;
             }}
-            formatter={(value) => [`₹${value.toFixed(2)}`, 'Close Price']}
+            formatter={(value, name) => [`₹${value.toFixed(2)}`, name === 'close' ? 'Close Price' : 'Open Price']}
+          />
+          <Legend verticalAlign="top" height={36}/>
+          <Line 
+            name="open"
+            type="monotone" 
+            dataKey="open" 
+            stroke="#94a3b8" 
+            strokeWidth={1.5}
+            dot={false}
+            activeDot={{ r: 4 }}
           />
           <Line 
+            name="close"
             type="monotone" 
             dataKey="close" 
             stroke="#2563eb" 

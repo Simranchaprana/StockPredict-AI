@@ -94,13 +94,20 @@ export default function Dashboard() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-          <p className="text-gray-500">Analyze and predict stock movements</p>
-        </div>
-        <div className="mt-4 md:mt-0 w-full md:w-auto">
+      <div className="flex flex-col items-center mb-8 pt-4">
+        <div className="w-full max-w-2xl">
           <StockSearch onSearch={handleSearch} />
+        </div>
+        <div className="mt-4 flex flex-wrap justify-center gap-2">
+          {['RELIANCE.NS', 'TCS.NS', 'HDFCBANK.NS', 'AAPL', 'MSFT', 'TSLA'].map(sym => (
+            <button
+              key={sym}
+              onClick={() => handleSearch(sym)}
+              className="px-3 py-1 bg-white border border-gray-200 rounded-full text-xs font-medium text-gray-600 hover:bg-gray-50 hover:text-blue-600 transition-colors shadow-sm"
+            >
+              {sym}
+            </button>
+          ))}
         </div>
       </div>
 
@@ -152,47 +159,7 @@ export default function Dashboard() {
                 </div>
                 <PriceChart data={history} />
               </div>
-              
-              <IndicatorCard indicators={indicators} />
-            </div>
-
-            <div className="space-y-6">
-              {intradayPredictions && (
-                <div className="bg-white p-6 rounded-lg shadow border border-gray-100">
-                  <div className="mb-4">
-                    <h3 className="text-lg leading-6 font-medium text-gray-900 mb-1">
-                      Today's Prediction (Live Scalping)
-                    </h3>
-                    <p className="text-sm text-gray-500">
-                      Real-time high-frequency AI predictions for the next few minutes.
-                    </p>
-                  </div>
-                  <div className="grid grid-cols-3 gap-3">
-                    {['5min', '8min', '10min'].map(interval => {
-                      const pred = intradayPredictions[interval];
-                      if (!pred || pred.error) return null;
-                      const isUp = pred.prediction === 'UP';
-                      return (
-                        <div key={interval} className={`p-3 rounded-lg text-center border ${isUp ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}>
-                          <div className="text-xs font-semibold text-gray-600 mb-2 uppercase tracking-wider">{interval}</div>
-                          <div className={`text-2xl font-bold ${isUp ? 'text-green-600' : 'text-red-600'}`}>
-                            {pred.prediction}
-                          </div>
-                          <div className="text-xs text-gray-500 mt-2 font-medium">
-                            Valid Until: {pred.target_time}
-                          </div>
-                          <div className="text-[10px] text-gray-400 mt-1">
-                            {(pred.confidence * 100).toFixed(1)}% confidence
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-              
-              <PredictionCard prediction={prediction} />
-              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {performance && (
                 <div className="bg-white p-6 rounded-lg shadow border border-gray-100">
                   <h3 className="text-lg font-medium mb-4 text-gray-900">Model Performance (CV)</h3>
@@ -312,7 +279,48 @@ export default function Dashboard() {
                     </table>
                   </div>
                 </div>
+              )}              </div>
+            </div>
+
+            <div className="space-y-6">
+              {intradayPredictions && (
+                <div className="bg-white p-6 rounded-lg shadow border border-gray-100">
+                  <div className="mb-4">
+                    <h3 className="text-lg leading-6 font-medium text-gray-900 mb-1">
+                      Today's Prediction (Live Scalping)
+                    </h3>
+                    <p className="text-sm text-gray-500">
+                      Real-time high-frequency AI predictions for the next few minutes.
+                    </p>
+                  </div>
+                  <div className="grid grid-cols-3 gap-3">
+                    {['5min', '8min', '10min'].map(interval => {
+                      const pred = intradayPredictions[interval];
+                      if (!pred || pred.error) return null;
+                      const isUp = pred.prediction === 'UP';
+                      return (
+                        <div key={interval} className={`p-3 rounded-lg text-center border ${isUp ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}>
+                          <div className="text-xs font-semibold text-gray-600 mb-2 uppercase tracking-wider">{interval}</div>
+                          <div className={`text-2xl font-bold ${isUp ? 'text-green-600' : 'text-red-600'}`}>
+                            {pred.prediction}
+                          </div>
+                          <div className="text-xs text-gray-500 mt-2 font-medium">
+                            Valid Until: {pred.target_time}
+                          </div>
+                          <div className="text-[10px] text-gray-400 mt-1">
+                            {(pred.confidence * 100).toFixed(1)}% confidence
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
               )}
+              
+              <PredictionCard prediction={prediction} />
+              <IndicatorCard indicators={indicators} />
+              
+
             </div>
           </div>
         </div>
