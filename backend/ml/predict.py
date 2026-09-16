@@ -41,7 +41,7 @@ def predict_next_day(symbol: str):
     
     direction = "UP" if prediction == 1 else "DOWN"
     
-    # Use the ML Regressor for return prediction, then compute price
+    # Use the ML Regressor to predict return, then calculate price
     predicted_return = regressor.predict(latest_features)[0]
     current_price = df['Close'].iloc[-1]
     predicted_price = current_price * (1 + predicted_return)

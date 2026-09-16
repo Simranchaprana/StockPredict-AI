@@ -66,14 +66,15 @@ def compute_indicators(df: pd.DataFrame) -> pd.DataFrame:
 
 def generate_target(df: pd.DataFrame) -> pd.DataFrame:
     """
-    Generates target variable (1 if next day close > today close, else 0)
-    and Next_Return for stationary regression.
+    Generates target variable (1 if next day close > today close, else 0).
     """
     df = df.copy()
+    # Next day's close
     df['Next_Close'] = df['Close'].shift(-1)
+    df['Next_Return'] = df['Next_Close'] / df['Close'] - 1
     df['Target'] = (df['Next_Close'] > df['Close']).astype(int)
-    df['Next_Return'] = (df['Next_Close'] - df['Close']) / df['Close']
     
+    # The last row will not have a valid Next_Close/Target, we should leave it or drop it in training
     return df
 
 def prepare_features(df: pd.DataFrame) -> pd.DataFrame:

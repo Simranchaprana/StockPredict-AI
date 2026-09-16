@@ -88,9 +88,14 @@ def train_models(symbol="RELIANCE.NS"):
         
         # Random Forest Regressor
         rf_regressor.fit(X_train, y_train_r)
-        reg_preds = rf_regressor.predict(X_test)
-        reg_metrics['mae'].append(mean_absolute_error(y_test_r, reg_preds))
-        reg_metrics['r2'].append(r2_score(y_test_r, reg_preds))
+        reg_pred_return = rf_regressor.predict(X_test)
+        # Reconstruct absolute prices for MAE calculation
+        current_prices = train_df.loc[X_test.index, 'Close']
+        actual_prices = current_prices * (1 + y_test_r)
+        predicted_prices = current_prices * (1 + reg_pred_return)
+        
+        reg_metrics['mae'].append(mean_absolute_error(actual_prices, predicted_prices))
+        reg_metrics['r2'].append(r2_score(actual_prices, predicted_prices))
     
     # Train final models on all data
     from sklearn.calibration import CalibratedClassifierCV, calibration_curve
