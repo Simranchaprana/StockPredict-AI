@@ -178,7 +178,7 @@ export default function Dashboard() {
                     <div className="text-sm text-gray-500 flex justify-between mt-2">
                       <span>High-frequency signals</span>
                       <span className="text-xs font-medium text-gray-600 bg-gray-50 px-2 py-0.5 rounded border border-gray-100">
-                        {intradayPredictions['5min']?.latest_time || ''}
+                        Valid until {intradayPredictions['10min']?.target_time || intradayPredictions['5min']?.target_time || ''}
                       </span>
                     </div>
                   </div>
