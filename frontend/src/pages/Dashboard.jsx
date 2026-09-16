@@ -14,6 +14,7 @@ export default function Dashboard() {
   const [history, setHistory] = useState([]);
   const [indicators, setIndicators] = useState(null);
   const [prediction, setPrediction] = useState(null);
+  const [todayPrediction, setTodayPrediction] = useState(null);
   const [performance, setPerformance] = useState(null);
   const [predictionLogs, setPredictionLogs] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -38,7 +39,8 @@ export default function Dashboard() {
       // Fetch prediction
       try {
         const predRes = await axios.get(`${API_BASE}/predict/${sym}`);
-        setPrediction(predRes.data);
+        setPrediction(predRes.data.next_day_prediction);
+        setTodayPrediction(predRes.data.today_prediction);
       } catch (err) {
         setPrediction({ error: err.response?.data?.detail || err.message });
       }
@@ -145,6 +147,13 @@ export default function Dashboard() {
             </div>
 
             <div className="space-y-6">
+              {todayPrediction && (
+                <PredictionCard 
+                  prediction={todayPrediction} 
+                  title="Today's Prediction (Intraday)" 
+                />
+              )}
+              
               <PredictionCard prediction={prediction} />
               
               {performance && (

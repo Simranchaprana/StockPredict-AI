@@ -30,45 +30,56 @@ def predict_next_day(symbol: str):
         
     df = prepare_features(df)
     
-    latest_features = df[FEATURE_COLS].iloc[-1:]
-    
-    if latest_features.isnull().values.any():
-        return {"error": "Not enough historical data to compute technical indicators."}
+    # Helper to generate prediction for a specific row
+    def generate_prediction_for_row(row_idx):
+        features = df[FEATURE_COLS].iloc[row_idx:row_idx+1]
         
-    prediction = classifier.predict(latest_features)[0]
-    probabilities = classifier.predict_proba(latest_features)[0]
-    confidence = probabilities[prediction]
-    
-    direction = "UP" if prediction == 1 else "DOWN"
-    
-    # Use the ML Regressor to predict return, then calculate price
-    predicted_return = regressor.predict(latest_features)[0]
-    current_price = df['Close'].iloc[-1]
-    predicted_price = current_price * (1 + predicted_return)
-    
-    latest_date_dt = latest_features.index[0]
-    latest_date_str = latest_date_dt.strftime('%Y-%m-%d')
-    days_to_add = 3 if latest_date_dt.weekday() == 4 else 1
-    target_date_str = (latest_date_dt + pd.Timedelta(days=days_to_add)).strftime('%Y-%m-%d')
+        if features.isnull().values.any():
+            return None
+            
+        pred_class = classifier.predict(features)[0]
+        probabilities = classifier.predict_proba(features)[0]
+        confidence = probabilities[pred_class]
+        direction = "UP" if pred_class == 1 else "DOWN"
+        
+        predicted_return = regressor.predict(features)[0]
+        current_price = df['Close'].iloc[row_idx]
+        predicted_price = current_price * (1 + predicted_return)
+        
+        date_dt = features.index[0]
+        date_str = date_dt.strftime('%Y-%m-%d')
+        days_to_add = 3 if date_dt.weekday() == 4 else 1
+        target_date_str = (date_dt + pd.Timedelta(days=days_to_add)).strftime('%Y-%m-%d')
 
-    # Direction/Price Consistency Check
-    price_implied_direction = "UP" if predicted_price > current_price else "DOWN"
-    models_agree = (direction == price_implied_direction)
+        price_implied_direction = "UP" if predicted_price > current_price else "DOWN"
+        models_agree = (direction == price_implied_direction)
+        
+        warning = None
+        if not models_agree:
+            warning = f"Classifier predicts {direction} but Regressor price target (₹{predicted_price:.2f}) implies {price_implied_direction}. Treat with caution."
+
+        return {
+            "symbol": symbol,
+            "prediction": direction,
+            "predicted_price": round(predicted_price, 2),
+            "confidence": round(confidence, 2),
+            "model": "Random Forest ML",
+            "latest_data_date": date_str,
+            "target_date": target_date_str,
+            "models_agree": models_agree,
+            "warning": warning
+        }
+
+    next_day_prediction = generate_prediction_for_row(-1)
     
-    warning = None
-    if not models_agree:
-        warning = f"Classifier predicts {direction} but Regressor price target (₹{predicted_price:.2f}) implies {price_implied_direction}. Treat with caution."
+    # Intraday / Today prediction (using yesterday's data to predict today)
+    today_prediction = None
+    if len(df) >= 2:
+        today_prediction = generate_prediction_for_row(-2)
 
     return {
-        "symbol": symbol,
-        "prediction": direction,
-        "predicted_price": round(predicted_price, 2),
-        "confidence": round(confidence, 2),
-        "model": "Random Forest ML",
-        "latest_data_date": latest_date_str,
-        "target_date": target_date_str,
-        "models_agree": models_agree,
-        "warning": warning
+        "next_day_prediction": next_day_prediction,
+        "today_prediction": today_prediction
     }
     
 def get_model_metrics(symbol: str):

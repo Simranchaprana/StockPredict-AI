@@ -88,24 +88,26 @@ def get_stock_indicators(symbol: str):
 @app.get("/api/predict/{symbol}")
 def get_prediction(symbol: str, db: Session = Depends(get_db)):
     try:
-        prediction = predict_next_day(symbol)
-        if not prediction:
+        prediction_data = predict_next_day(symbol)
+        if not prediction_data:
             raise HTTPException(status_code=404, detail="Could not generate prediction")
-        if "error" in prediction:
-            raise HTTPException(status_code=400, detail=prediction["error"])
+        if "error" in prediction_data:
+            raise HTTPException(status_code=400, detail=prediction_data["error"])
             
+        next_day = prediction_data['next_day_prediction']
+        
         # Log to DB
         log_entry = models.PredictionLog(
             symbol=symbol,
-            prediction_direction=prediction['prediction'],
-            confidence=prediction['confidence'],
-            predicted_price=prediction['predicted_price'],
-            model=prediction['model']
+            prediction_direction=next_day['prediction'],
+            confidence=next_day['confidence'],
+            predicted_price=next_day['predicted_price'],
+            model=next_day['model']
         )
         db.add(log_entry)
         db.commit()
             
-        return prediction
+        return prediction_data
     except FileNotFoundError:
         raise HTTPException(status_code=500, detail="Model not trained yet")
 

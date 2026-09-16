@@ -1,7 +1,7 @@
 import React from 'react';
 import { TrendingUp, TrendingDown, AlertCircle } from 'lucide-react';
 
-export default function PredictionCard({ prediction }) {
+export default function PredictionCard({ prediction, title = "Next-Day Prediction (AI Model)" }) {
   if (!prediction) return null;
 
   if (prediction.error) {
@@ -23,7 +23,7 @@ export default function PredictionCard({ prediction }) {
     <div className="bg-white rounded-lg shadow border border-gray-100 overflow-hidden">
       <div className="px-6 py-5">
         <h3 className="text-lg leading-6 font-medium text-gray-900 mb-1">
-          Next-Day Prediction (AI Model)
+          {title}
         </h3>
         <p className="text-sm text-gray-500 mb-6">
           Predicting for <span className="font-bold text-gray-800">{prediction.target_date}</span> based on {prediction.latest_data_date} data.
