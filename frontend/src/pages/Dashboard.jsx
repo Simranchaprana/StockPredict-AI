@@ -175,8 +175,11 @@ export default function Dashboard() {
                     <h3 className="text-lg leading-6 font-medium text-gray-900 mb-1">
                       Today's Prediction (Live Scalping)
                     </h3>
-                    <div className="text-sm text-gray-500 mt-2">
+                    <div className="text-sm text-gray-500 flex justify-between mt-2">
                       <span>High-frequency signals</span>
+                      <span className="text-xs font-medium text-gray-600 bg-gray-50 px-2 py-0.5 rounded border border-gray-100">
+                        {intradayPredictions['5min']?.latest_time || ''}
+                      </span>
                     </div>
                   </div>
                   <div className="grid grid-cols-3 gap-3">
@@ -185,16 +188,13 @@ export default function Dashboard() {
                       if (!pred || pred.error) return null;
                       const isUp = pred.prediction === 'UP';
                       return (
-                        <div key={interval} className={`p-3 rounded-lg flex flex-col items-center justify-between text-center border shadow-sm ${isUp ? 'bg-green-50 border-green-100' : 'bg-red-50 border-red-100'}`}>
-                          <div className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">{interval}</div>
-                          <div className={`text-xl font-bold my-1 tracking-wide ${isUp ? 'text-green-500' : 'text-red-500'}`}>
+                        <div key={interval} className="p-3 rounded-lg flex flex-col items-center justify-between text-center border border-gray-100 bg-white shadow-sm">
+                          <div className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest">{interval}</div>
+                          <div className={`text-xl font-bold my-1 ${isUp ? 'text-green-500' : 'text-red-500'}`}>
                             {pred.prediction}
                           </div>
-                          <div className={`mt-1 mb-1 text-[13px] font-bold ${isUp ? 'text-green-500' : 'text-red-500'}`}>
+                          <div className={`mt-1 text-[12px] font-semibold ${isUp ? 'text-green-600' : 'text-gray-500'}`}>
                             {(pred.confidence * 100).toFixed(1)}% Conf
-                          </div>
-                          <div className="text-[11px] text-gray-500 font-medium mt-1">
-                            {pred.target_time}
                           </div>
                         </div>
                       );
