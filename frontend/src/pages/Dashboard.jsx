@@ -185,15 +185,15 @@ export default function Dashboard() {
                       if (!pred || pred.error) return null;
                       const isUp = pred.prediction === 'UP';
                       return (
-                        <div key={interval} className={`p-3 rounded-lg flex flex-col items-center justify-between text-center border shadow-sm ${isUp ? 'bg-gradient-to-b from-green-50 to-white border-green-200' : 'bg-gradient-to-b from-red-50 to-white border-red-200'}`}>
+                        <div key={interval} className={`p-3 rounded-lg flex flex-col items-center justify-between text-center border shadow-sm ${isUp ? 'bg-green-50 border-green-100' : 'bg-red-50 border-red-100'}`}>
                           <div className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">{interval}</div>
-                          <div className={`text-2xl font-bold my-1 ${isUp ? 'text-green-600' : 'text-red-500'}`}>
+                          <div className={`text-xl font-bold my-1 tracking-wide ${isUp ? 'text-green-500' : 'text-red-500'}`}>
                             {pred.prediction}
                           </div>
-                          <div className={`mt-1 mb-1 text-[13px] font-bold ${isUp ? 'text-green-600' : 'text-red-500'}`}>
+                          <div className={`mt-1 mb-1 text-[13px] font-bold ${isUp ? 'text-green-500' : 'text-red-500'}`}>
                             {(pred.confidence * 100).toFixed(1)}% Conf
                           </div>
-                          <div className="text-[11px] text-gray-600 font-medium">
+                          <div className="text-[11px] text-gray-500 font-medium mt-1">
                             {pred.target_time}
                           </div>
                         </div>
