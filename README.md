@@ -1,6 +1,6 @@
 # 📈 Dynamic Stock Market Prediction & Analysis Platform
 
-A full-stack web application that fetches historical stock market data, computes technical indicators, and uses machine learning to predict next-day price direction (UP/DOWN) and closing price — with proper time-series validation and backtested performance metrics.
+A full-stack web application that fetches historical and real-time stock market data, computes technical indicators, and uses machine learning to predict both high-frequency intraday price movements (Live Scalping) and next-day price direction (UP/DOWN). Features proper time-series validation and backtested performance metrics.
 
 > **Disclaimer:** This project is built for educational and academic purposes only. Predictions are model outputs based on historical data and technical indicators — they do **not** constitute financial or investment advice. Stock markets are influenced by countless unpredictable factors, and no model guarantees future returns.
 
@@ -17,8 +17,6 @@ A full-stack web application that fetches historical stock market data, computes
 - [API Reference](#api-reference)
 - [Machine Learning Approach](#machine-learning-approach)
 - [Model Performance](#model-performance)
-- [Roadmap / Future Scope](#roadmap--future-scope)
-- [Contributing](#contributing)
 - [License](#license)
 
 ---
@@ -28,20 +26,22 @@ A full-stack web application that fetches historical stock market data, computes
 Retail investors and students often need to check multiple platforms to view historical stock trends, calculate technical indicators, and gauge short-term momentum. This project consolidates that workflow into a single dynamic web application:
 
 1. User selects/searches a stock ticker (e.g. `RELIANCE.NS`, `AAPL`, `TCS.NS`)
-2. The backend fetches historical OHLCV data via `yfinance`
-3. Technical indicators (SMA, EMA, RSI, MACD, Bollinger Bands) are computed
-4. A trained ML model predicts next-day **direction** (UP/DOWN) and, optionally, the **closing price**
-5. Results — price, indicators, prediction, confidence, and historical model performance — are rendered on an interactive dashboard
+2. The backend fetches both **live 1-minute data** and historical OHLCV data via `yfinance`
+3. Technical indicators (SMA, EMA, RSI, MACD, Bollinger Bands) are computed on the fly
+4. A trained ML model predicts the next-day **direction** (UP/DOWN) and high-frequency intraday targets (5min, 8min, 10min)
+5. The dashboard silently polls the backend every 60 seconds to provide **real-time updates** without page reloads
+6. Results — price, indicators, prediction, confidence, and historical model performance — are rendered interactively
 
 ---
 
 ## Features
 
 - 🔍 **Dynamic stock search** — any valid ticker symbol, not a fixed list
-- 📊 **Interactive historical price charts** (1M / 3M / 6M / 1Y / 5Y)
+- 📊 **Interactive real-time price charts** — Toggle between intraday (1D, 5D) with exact minute markers, and long-term history (1M to 5Y) with EOD markers
+- ⏱️ **Live Scalping Predictions** — High-frequency predictions (5-min, 8-min, 10-min) generated on the fly from the latest 1-minute ticker data
 - 📉 **Technical indicators** — SMA(20/50/200), EMA(20/50), RSI, MACD, Bollinger Bands, rolling volatility
-- 🤖 **ML-based prediction** — next-day direction (UP/DOWN) with confidence score, and optional next-day price estimate
-- 🏆 **Model comparison** — Logistic Regression vs. Random Forest, with accuracy/precision/recall/F1/ROC-AUC reported side by side
+- 🤖 **Next-Day ML Prediction** — Next-day direction (UP/DOWN) with confidence score, and optional next-day price estimate
+- 🏆 **Model Comparison** — Logistic Regression vs. Random Forest, with accuracy/precision/recall/F1/ROC-AUC reported side by side in a dedicated tab
 - 🕰️ **Prediction history** — logs past predictions vs. actual outcomes for transparency
 - 💰 **Backtesting module** — simulates a simple UP-signal strategy against a fixed starting capital, reported alongside buy-and-hold for honest comparison
 
@@ -74,6 +74,7 @@ Retail investors and students often need to check multiple platforms to view his
               ┌─────────────────────┐
               │    WEB FRONTEND      │
               │  React + Tailwind    │
+              │  (Real-Time Polling) │
               └──────────┬──────────┘
                          │ REST API
                          ▼
@@ -81,6 +82,7 @@ Retail investors and students often need to check multiple platforms to view his
               │   FASTAPI SERVER     │
               │ /stock /history      │
               │ /predict /indicators │
+              │ /predict_intraday    │
               │ /performance         │
               └──────────┬──────────┘
                          │
@@ -138,14 +140,6 @@ npm run dev -- --port 5173
 
 Frontend runs at `http://localhost:5173`
 
-### 4. Train the ML model
-
-The system auto-trains models on the fly when you search for a new ticker. You can also trigger it manually:
-```bash
-cd backend
-python ml/train.py RELIANCE.NS
-```
-
 ---
 
 ## API Reference
@@ -153,8 +147,9 @@ python ml/train.py RELIANCE.NS
 | Method | Endpoint | Description |
 |---|---|---|
 | GET | `/api/stock/{symbol}` | Latest price, OHLCV, daily change |
-| GET | `/api/history/{symbol}?period=1y` | Historical price series |
+| GET | `/api/history/{symbol}?period=1d` | Historical price series (intraday and long-term) |
 | GET | `/api/indicators/{symbol}` | SMA, EMA, RSI, MACD, Bollinger Bands |
+| GET | `/api/predict_intraday/{symbol}` | Live Scalping high-frequency predictions (5m, 8m, 10m) |
 | GET | `/api/predict/{symbol}` | Next-day direction + confidence |
 | GET | `/api/performance/{symbol}` | Model accuracy/precision/recall/F1/ROC-AUC + backtest results |
 | GET | `/api/history_logs/{symbol}` | Retrieves prediction history logged in SQLite |
@@ -163,13 +158,13 @@ python ml/train.py RELIANCE.NS
 
 ## Machine Learning Approach
 
-1. **Data**: 5 years of daily OHLCV data via `yfinance`
-2. **Feature engineering**: daily returns, SMA(20/50/200), EMA(20/50), RSI, MACD, rolling volatility, momentum, high-low spread
-3. **Target**: `1` if next day's close > today's close, else `0` (direction classification); regressor target for exact price estimation
-4. **Validation**: `TimeSeriesSplit` (chronological, no shuffling) — critical to avoid lookahead bias
-5. **Models compared**: Logistic Regression (baseline), Random Forest
-6. **Metrics**: Accuracy, Precision, Recall, F1, ROC-AUC (classification); MAE, R² (regression)
-7. **Backtest**: Simple UP-signal strategy vs. buy-and-hold, over the test period — reported honestly, without profit guarantees
+1. **Intraday Live Scalping (NEW)**: Fetches up to 7 days of 1-minute interval data, resamples to target frequencies, and trains a lightweight Random Forest dynamically to predict immediate momentum shifts.
+2. **Next-Day Historical Data**: 5 years of daily OHLCV data via `yfinance`.
+3. **Feature engineering**: daily returns, SMA(20/50/200), EMA(20/50), RSI, MACD, rolling volatility, momentum, high-low spread.
+4. **Target**: `1` if next day's close > today's close, else `0` (direction classification).
+5. **Validation**: `TimeSeriesSplit` (chronological, no shuffling) — critical to avoid lookahead bias.
+6. **Models compared**: Logistic Regression (baseline), Random Forest.
+7. **Backtest**: Simple UP-signal strategy vs. buy-and-hold, over the test period — reported honestly.
 
 ---
 
@@ -177,10 +172,10 @@ python ml/train.py RELIANCE.NS
 
 Because this platform evaluates models using **TimeSeriesSplit** (which strictly respects chronological order to prevent data leakage) and simulates a trading strategy on unseen data, the performance metrics are highly realistic. 
 
-Rather than hardcoding static metrics here, run the application and view the **Live Performance Dashboard** for any ticker. The dashboard dynamically displays:
+Run the application and view the **Dashboard Tabs** for any ticker. The dashboard dynamically displays:
 - Cross-validated **Accuracy, Precision, Recall, F1 Score, and ROC-AUC** for both Random Forest and Logistic Regression.
-- **Mean Absolute Error (MAE)** and **R²** for the Price Regressor.
-- An honest **1-Fold Backtest** comparing the model's UP-signal strategy against a standard Buy & Hold strategy.
+- An honest **Backtest** comparing the model's UP-signal strategy against a standard Buy & Hold strategy (Win Rate, Max Drawdown, Sharpe Ratio).
+- **Prediction History Log** comparing the model's past Next-Day predictions against what actual direction the stock ultimately went.
 
 ---
 
