@@ -1,5 +1,5 @@
 import React from 'react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Brush } from 'recharts';
 
 export default function PriceChart({ data }) {
   if (!data || data.length === 0) {
@@ -65,7 +65,7 @@ export default function PriceChart({ data }) {
   };
 
   return (
-    <div className="h-96 w-full mt-4">
+    <div className="h-[450px] w-full mt-4">
       <ResponsiveContainer width="100%" height="100%">
         <LineChart data={chartData} margin={{ top: 5, right: 20, left: 10, bottom: 5 }}>
           <CartesianGrid strokeDasharray="3 3" vertical={false} />
@@ -91,6 +91,7 @@ export default function PriceChart({ data }) {
             dot={false}
             activeDot={false}
           />
+          <Brush dataKey="xAxisLabel" height={30} stroke="#3b82f6" fill="#f3f4f6" travellerWidth={10} />
         </LineChart>
       </ResponsiveContainer>
     </div>
