@@ -26,7 +26,7 @@ export default function PriceChart({ data }) {
     const tooltipDate = d.toLocaleDateString();
     const tooltipTime = isIntraday
       ? d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })
-      : "End of Day (Close)";
+      : "15:30";
 
     return {
       ...item,
@@ -43,7 +43,7 @@ export default function PriceChart({ data }) {
   const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
       const dataPoint = payload[0].payload;
-      const isEOD = dataPoint.tooltipTime === "End of Day (Close)";
+      const isEOD = dataPoint.tooltipTime === "15:30";
       
       return (
         <div className="bg-white p-3 border border-gray-200 shadow-md rounded-md">
