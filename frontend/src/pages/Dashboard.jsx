@@ -185,9 +185,9 @@ export default function Dashboard() {
                       if (!pred || pred.error) return null;
                       const isUp = pred.prediction === 'UP';
                       return (
-                        <div key={interval} className={`p-3 rounded-lg flex flex-col items-center justify-between text-center border shadow-sm ${isUp ? 'bg-gradient-to-b from-green-50 to-white border-green-200' : 'bg-gradient-to-b from-red-50 to-white border-red-200'}`}>
+                        <div key={interval} className={`p-3 rounded-lg flex flex-col items-center justify-between text-center border shadow-sm ${isUp ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}>
                           <div className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">{interval}</div>
-                          <div className={`text-2xl font-bold my-1 ${isUp ? 'text-green-600' : 'text-red-600'}`}>
+                          <div className={`text-xl font-bold my-1 ${isUp ? 'text-green-600' : 'text-red-600'}`}>
                             {pred.prediction}
                           </div>
                           <div className={`mt-1 mb-1 text-[13px] font-extrabold ${isUp ? 'text-green-600' : 'text-red-600'}`}>
