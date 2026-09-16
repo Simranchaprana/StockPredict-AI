@@ -177,7 +177,9 @@ export default function Dashboard() {
                     </h3>
                     <div className="text-sm text-gray-500 flex justify-between mt-2">
                       <span>High-frequency signals</span>
-                      <span className="text-xs font-semibold text-gray-700 bg-gray-100 px-2 py-0.5 rounded">Valid Until Below</span>
+                      <span className="text-xs font-semibold text-gray-700 bg-gray-100 px-2 py-0.5 rounded">
+                        {intradayPredictions['5min']?.latest_time || ''}
+                      </span>
                     </div>
                   </div>
                   <div className="grid grid-cols-3 gap-3">
@@ -191,11 +193,8 @@ export default function Dashboard() {
                           <div className={`text-2xl font-black my-1 ${isUp ? 'text-green-600' : 'text-red-600'}`}>
                             {pred.prediction}
                           </div>
-                          <div className={`mt-1 mb-2 text-[13px] font-extrabold ${isUp ? 'text-green-600' : 'text-red-600'}`}>
+                          <div className={`mt-1 text-[13px] font-extrabold ${isUp ? 'text-green-600' : 'text-red-600'}`}>
                             {(pred.confidence * 100).toFixed(1)}% Conf
-                          </div>
-                          <div className="text-[11px] text-gray-600 font-medium">
-                            {pred.target_time}
                           </div>
                         </div>
                       );
