@@ -10,23 +10,54 @@ export default function PriceChart({ data }) {
     );
   }
 
+  // Determine if dataset is purely daily (all times are 00:00:00 or midnight)
+  // If even one row has a non-midnight time, it's intraday
+  const isIntraday = data.some(item => !item.date.includes('00:00:00'));
+
   // Format the dates for display
   const chartData = data.map(item => {
     const d = new Date(item.date);
-    const isDaily = item.date.endsWith('00:00:00');
+    
+    // For X-Axis: if intraday, show time only (e.g. 14:35). If daily, show date only (e.g. Sep 16).
+    const xAxisLabel = isIntraday 
+      ? d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })
+      : d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+      
+    // For Tooltip: Show full Date and Time if intraday
+    const tooltipDate = isIntraday 
+      ? d.toLocaleDateString() + ' ' + d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })
+      : d.toLocaleDateString();
+
     return {
       ...item,
-      formattedDate: isDaily 
-        ? d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
-        : d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) + ' ' + d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' }),
-      tooltipDate: d.toLocaleString()
+      xAxisLabel,
+      tooltipDate,
     };
   });
 
-  // Calculate min and max for better Y-axis scaling
-  const prices = data.flatMap(d => [d.close, d.open].filter(Boolean));
+  const prices = data.map(d => d.close);
   const min = Math.min(...prices) * 0.95;
   const max = Math.max(...prices) * 1.05;
+
+  const CustomTooltip = ({ active, payload, label }) => {
+    if (active && payload && payload.length) {
+      const dataPoint = payload[0].payload;
+      return (
+        <div className="bg-white p-3 border border-gray-200 shadow-md rounded-md">
+          <p className="text-sm font-semibold text-gray-700 mb-2">{dataPoint.tooltipDate}</p>
+          <div className="space-y-1">
+            <p className="text-sm text-gray-600">
+              Open: <span className="font-medium text-gray-900">₹{dataPoint.open?.toFixed(2)}</span>
+            </p>
+            <p className="text-sm text-blue-600 font-semibold">
+              Close: <span>₹{dataPoint.close?.toFixed(2)}</span>
+            </p>
+          </div>
+        </div>
+      );
+    }
+    return null;
+  };
 
   return (
     <div className="h-96 w-full mt-4">
@@ -34,7 +65,7 @@ export default function PriceChart({ data }) {
         <LineChart data={chartData} margin={{ top: 5, right: 20, left: 10, bottom: 5 }}>
           <CartesianGrid strokeDasharray="3 3" vertical={false} />
           <XAxis 
-            dataKey="formattedDate" 
+            dataKey="xAxisLabel" 
             tick={{ fontSize: 12 }} 
             tickMargin={10}
             minTickGap={30}
@@ -45,25 +76,7 @@ export default function PriceChart({ data }) {
             tick={{ fontSize: 12 }}
             orientation="right"
           />
-          <Tooltip 
-            labelFormatter={(label, payload) => {
-              if (payload && payload.length > 0) {
-                return payload[0].payload.tooltipDate;
-              }
-              return label;
-            }}
-            formatter={(value, name) => [`₹${value.toFixed(2)}`, name === 'close' ? 'Close Price' : 'Open Price']}
-          />
-          <Legend verticalAlign="top" height={36}/>
-          <Line 
-            name="open"
-            type="monotone" 
-            dataKey="open" 
-            stroke="#94a3b8" 
-            strokeWidth={1.5}
-            dot={false}
-            activeDot={{ r: 4 }}
-          />
+          <Tooltip content={<CustomTooltip />} />
           <Line 
             name="close"
             type="monotone" 

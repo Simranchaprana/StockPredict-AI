@@ -1,15 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import StockSearch from '../components/StockSearch';
 import PriceChart from '../components/PriceChart';
-import PredictionCard from '../components/PredictionCard';
 import IndicatorCard from '../components/IndicatorCard';
+import PredictionCard from '../components/PredictionCard';
+import StockSearch from '../components/StockSearch';
+import DashboardTabs from '../components/DashboardTabs';
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api';
 
 export default function Dashboard() {
   const [symbol, setSymbol] = useState('RELIANCE.NS');
-  const [chartPeriod, setChartPeriod] = useState('1y');
+  const [chartPeriod, setChartPeriod] = useState('5y');
+  const [activeTab, setActiveTab] = useState(0);
   const [stockInfo, setStockInfo] = useState(null);
   const [history, setHistory] = useState([]);
   const [indicators, setIndicators] = useState(null);
@@ -159,127 +161,11 @@ export default function Dashboard() {
                 </div>
                 <PriceChart data={history} />
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {performance && (
-                <div className="bg-white p-6 rounded-lg shadow border border-gray-100">
-                  <h3 className="text-lg font-medium mb-4 text-gray-900">Model Performance (CV)</h3>
-                  
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-sm font-semibold text-gray-700 mb-2">Random Forest</p>
-                      <div className="space-y-1">
-                        <div className="flex justify-between text-xs"><span className="text-gray-500">Acc</span><span className="font-medium">{(performance['Random Forest'].accuracy * 100).toFixed(1)}%</span></div>
-                        <div className="flex justify-between text-xs"><span className="text-gray-500">Prec</span><span className="font-medium">{performance['Random Forest'].precision.toFixed(2)}</span></div>
-                        <div className="flex justify-between text-xs"><span className="text-gray-500">Rec</span><span className="font-medium">{performance['Random Forest'].recall.toFixed(2)}</span></div>
-                        <div className="flex justify-between text-xs"><span className="text-gray-500">F1</span><span className="font-medium">{performance['Random Forest'].f1.toFixed(2)}</span></div>
-                        <div className="flex justify-between text-xs"><span className="text-gray-500">ROC-AUC</span><span className="font-medium">{performance['Random Forest'].roc_auc ? performance['Random Forest'].roc_auc.toFixed(2) : 'N/A'}</span></div>
-                      </div>
-                    </div>
-                    <div>
-                      <p className="text-sm font-semibold text-gray-700 mb-2">Logistic Reg.</p>
-                      <div className="space-y-1">
-                        <div className="flex justify-between text-xs"><span className="text-gray-500">Acc</span><span className="font-medium">{(performance['Logistic Regression'].accuracy * 100).toFixed(1)}%</span></div>
-                        <div className="flex justify-between text-xs"><span className="text-gray-500">Prec</span><span className="font-medium">{performance['Logistic Regression'].precision.toFixed(2)}</span></div>
-                        <div className="flex justify-between text-xs"><span className="text-gray-500">Rec</span><span className="font-medium">{performance['Logistic Regression'].recall.toFixed(2)}</span></div>
-                        <div className="flex justify-between text-xs"><span className="text-gray-500">F1</span><span className="font-medium">{performance['Logistic Regression'].f1.toFixed(2)}</span></div>
-                        <div className="flex justify-between text-xs"><span className="text-gray-500">ROC-AUC</span><span className="font-medium">{performance['Logistic Regression'].roc_auc ? performance['Logistic Regression'].roc_auc.toFixed(2) : 'N/A'}</span></div>
-
-                      </div>
-                    </div>
-                  </div>
-
-                  <hr className="my-4 border-gray-200" />
-                  
-                  <h4 className="text-sm font-medium text-gray-900 mb-2">Price Regressor</h4>
-                  <div className="space-y-2 mb-4">
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-600">MAE</span>
-                      <span className="font-medium">₹{performance.Regressor.mae.toFixed(2)}</span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-600">R² Score</span>
-                      <span className="font-medium">{performance.Regressor.r2.toFixed(3)}</span>
-                    </div>
-                  </div>
-
-                  <hr className="my-4 border-gray-200" />
-                  
-                  <h4 className="text-sm font-medium text-gray-900 mb-2">Backtest Result (1-Fold)</h4>
-                  <div className="space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-600 font-semibold">Strategy Return</span>
-                      <span className={`font-bold ${performance.Backtest.strategy_return >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                        {performance.Backtest.strategy_return?.toFixed(1)}%
-                      </span>
-                    </div>
-                    <div className="flex justify-between text-xs">
-                      <span className="text-gray-500">Sharpe Ratio</span>
-                      <span className={`font-medium ${performance.Backtest.strategy_sharpe >= 0 ? 'text-gray-700' : 'text-red-600'}`}>
-                        {performance.Backtest.strategy_sharpe?.toFixed(2)}
-                      </span>
-                    </div>
-                    <div className="flex justify-between text-xs">
-                      <span className="text-gray-500">Max Drawdown</span>
-                      <span className="font-medium text-red-600">{performance.Backtest.strategy_max_dd?.toFixed(1)}%</span>
-                    </div>
-                    <div className="flex justify-between text-xs">
-                      <span className="text-gray-500">Win Rate</span>
-                      <span className="font-medium text-gray-700">{performance.Backtest.strategy_win_rate?.toFixed(1)}%</span>
-                    </div>
-                    
-                    <div className="mt-3 pt-3 border-t border-gray-100">
-                      <div className="flex justify-between text-sm mb-1">
-                        <span className="text-gray-600 font-semibold">Buy & Hold Return</span>
-                        <span className={`font-bold ${performance.Backtest.buy_and_hold_return >= 0 ? 'text-blue-600' : 'text-red-600'}`}>
-                          {performance.Backtest.buy_and_hold_return?.toFixed(1)}%
-                        </span>
-                      </div>
-                      <div className="flex justify-between text-xs">
-                        <span className="text-gray-500">Sharpe Ratio</span>
-                        <span className={`font-medium ${performance.Backtest.buy_and_hold_sharpe >= 0 ? 'text-gray-700' : 'text-red-600'}`}>
-                          {performance.Backtest.buy_and_hold_sharpe?.toFixed(2)}
-                        </span>
-                      </div>
-                      <div className="flex justify-between text-xs">
-                        <span className="text-gray-500">Max Drawdown</span>
-                        <span className="font-medium text-red-600">{performance.Backtest.buy_and_hold_max_dd?.toFixed(1)}%</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {predictionLogs.length > 0 && (
-                <div className="bg-white p-6 rounded-lg shadow border border-gray-100 mt-6">
-                  <h3 className="text-lg font-medium mb-4 text-gray-900">Prediction History</h3>
-                  <div className="overflow-hidden shadow ring-1 ring-black ring-opacity-5 md:rounded-lg">
-                    <table className="min-w-full divide-y divide-gray-300">
-                      <thead className="bg-gray-50">
-                        <tr>
-                          <th className="py-2 pl-4 pr-3 text-left text-xs font-semibold text-gray-900 sm:pl-6">Date</th>
-                          <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900">Prediction</th>
-                          <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900">Price Est.</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-gray-200 bg-white">
-                        {predictionLogs.map((log) => (
-                          <tr key={log.id}>
-                            <td className="whitespace-nowrap py-2 pl-4 pr-3 text-xs text-gray-500 sm:pl-6">
-                              {new Date(log.date).toLocaleDateString()}
-                            </td>
-                            <td className={`whitespace-nowrap px-3 py-2 text-xs font-medium ${log.prediction_direction === 'UP' ? 'text-green-600' : 'text-red-600'}`}>
-                              {log.prediction_direction}
-                            </td>
-                            <td className="whitespace-nowrap px-3 py-2 text-xs text-gray-500">
-                              ₹{log.predicted_price.toFixed(2)}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              )}              </div>
+              <DashboardTabs 
+                indicators={indicators} 
+                performance={performance} 
+                predictionLogs={predictionLogs} 
+              />
             </div>
 
             <div className="space-y-6">
@@ -289,9 +175,10 @@ export default function Dashboard() {
                     <h3 className="text-lg leading-6 font-medium text-gray-900 mb-1">
                       Today's Prediction (Live Scalping)
                     </h3>
-                    <p className="text-sm text-gray-500">
-                      Real-time high-frequency AI predictions for the next few minutes.
-                    </p>
+                    <div className="text-sm text-gray-500 flex justify-between mt-2">
+                      <span>High-frequency signals</span>
+                      <span className="text-xs font-semibold text-gray-700 bg-gray-100 px-2 py-0.5 rounded">Valid Until Below</span>
+                    </div>
                   </div>
                   <div className="grid grid-cols-3 gap-3">
                     {['5min', '8min', '10min'].map(interval => {
@@ -299,16 +186,16 @@ export default function Dashboard() {
                       if (!pred || pred.error) return null;
                       const isUp = pred.prediction === 'UP';
                       return (
-                        <div key={interval} className={`p-3 rounded-lg text-center border ${isUp ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}>
-                          <div className="text-xs font-semibold text-gray-600 mb-2 uppercase tracking-wider">{interval}</div>
-                          <div className={`text-2xl font-bold ${isUp ? 'text-green-600' : 'text-red-600'}`}>
+                        <div key={interval} className={`p-3 rounded-lg flex flex-col items-center justify-between text-center border shadow-sm ${isUp ? 'bg-gradient-to-b from-green-50 to-white border-green-200' : 'bg-gradient-to-b from-red-50 to-white border-red-200'}`}>
+                          <div className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">{interval}</div>
+                          <div className={`text-2xl font-black my-1 ${isUp ? 'text-green-600' : 'text-red-600'}`}>
                             {pred.prediction}
                           </div>
-                          <div className="text-xs text-gray-500 mt-2 font-medium">
-                            Valid Until: {pred.target_time}
+                          <div className={`mt-1 mb-2 inline-block px-2 py-1 rounded text-xs font-bold text-white shadow-sm ${isUp ? 'bg-green-500' : 'bg-red-500'}`}>
+                            {(pred.confidence * 100).toFixed(1)}% Conf
                           </div>
-                          <div className="text-[10px] text-gray-400 mt-1">
-                            {(pred.confidence * 100).toFixed(1)}% confidence
+                          <div className="text-[11px] text-gray-600 font-medium">
+                            {pred.target_time}
                           </div>
                         </div>
                       );
@@ -318,7 +205,6 @@ export default function Dashboard() {
               )}
               
               <PredictionCard prediction={prediction} />
-              <IndicatorCard indicators={indicators} />
               
 
             </div>
