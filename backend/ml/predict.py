@@ -41,8 +41,10 @@ def predict_next_day(symbol: str):
     
     direction = "UP" if prediction == 1 else "DOWN"
     
-    # Use the ML Regressor for price prediction
-    predicted_price = regressor.predict(latest_features)[0]
+    # Use the ML Regressor for return prediction, then compute price
+    predicted_return = regressor.predict(latest_features)[0]
+    current_price = df['Close'].iloc[-1]
+    predicted_price = current_price * (1 + predicted_return)
     
     latest_date_dt = latest_features.index[0]
     latest_date_str = latest_date_dt.strftime('%Y-%m-%d')
@@ -50,7 +52,6 @@ def predict_next_day(symbol: str):
     target_date_str = (latest_date_dt + pd.Timedelta(days=days_to_add)).strftime('%Y-%m-%d')
 
     # Direction/Price Consistency Check
-    current_price = df['Close'].iloc[-1]
     price_implied_direction = "UP" if predicted_price > current_price else "DOWN"
     models_agree = (direction == price_implied_direction)
     

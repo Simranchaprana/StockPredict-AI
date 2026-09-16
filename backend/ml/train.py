@@ -23,11 +23,11 @@ def train_models(symbol="RELIANCE.NS"):
         
     df = prepare_features(df)
     
-    train_df = df.dropna(subset=FEATURE_COLS + ['Target', 'Next_Close']).copy()
+    train_df = df.dropna(subset=FEATURE_COLS + ['Target', 'Next_Return']).copy()
     
     X = train_df[FEATURE_COLS]
     y_class = train_df['Target']
-    y_reg = train_df['Next_Close']
+    y_reg = train_df['Next_Return']
     
     tscv = TimeSeriesSplit(n_splits=5)
     
