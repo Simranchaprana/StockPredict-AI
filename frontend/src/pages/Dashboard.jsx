@@ -179,7 +179,7 @@ export default function Dashboard() {
                             {pred.prediction}
                           </div>
                           <div className="text-xs text-gray-500 mt-2 font-medium">
-                            Target: {pred.target_time}
+                            Valid Until: {pred.target_time}
                           </div>
                           <div className="text-[10px] text-gray-400 mt-1">
                             {(pred.confidence * 100).toFixed(1)}% confidence
