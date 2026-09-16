@@ -47,10 +47,10 @@ export default function PriceChart({ data }) {
           <p className="text-sm font-semibold text-gray-700 mb-2">{dataPoint.tooltipDate}</p>
           <div className="space-y-1">
             <p className="text-sm text-gray-600">
-              Open: <span className="font-medium text-gray-900">₹{dataPoint.open?.toFixed(2)}</span>
+              Opening Rate: <span className="font-medium text-gray-900">₹{dataPoint.open?.toFixed(2)}</span>
             </p>
             <p className="text-sm text-blue-600 font-semibold">
-              Close: <span>₹{dataPoint.close?.toFixed(2)}</span>
+              Timely Rate: <span>₹{dataPoint.close?.toFixed(2)}</span>
             </p>
           </div>
         </div>
@@ -78,7 +78,7 @@ export default function PriceChart({ data }) {
           />
           <Tooltip content={<CustomTooltip />} />
           <Line 
-            name="close"
+            name="Timely Rate"
             type="monotone" 
             dataKey="close" 
             stroke="#2563eb" 
