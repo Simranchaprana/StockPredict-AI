@@ -161,7 +161,7 @@ export default function Dashboard() {
                 <PredictionCard 
                   prediction={todayPrediction} 
                   title="Today's Prediction (Intraday)" 
-                  intradayPredictions={intradayPredictions}
+                  intraday={intradayPredictions}
                 />
               )}
               
