@@ -195,11 +195,15 @@ export default function Dashboard() {
                   <div className="space-y-2">
                     <div className="flex justify-between text-sm">
                       <span className="text-gray-600 font-semibold">Strategy Return</span>
-                      <span className="font-bold text-green-600">{performance.Backtest.strategy_return?.toFixed(1)}%</span>
+                      <span className={`font-bold ${performance.Backtest.strategy_return >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                        {performance.Backtest.strategy_return?.toFixed(1)}%
+                      </span>
                     </div>
                     <div className="flex justify-between text-xs">
                       <span className="text-gray-500">Sharpe Ratio</span>
-                      <span className="font-medium text-gray-700">{performance.Backtest.strategy_sharpe?.toFixed(2)}</span>
+                      <span className={`font-medium ${performance.Backtest.strategy_sharpe >= 0 ? 'text-gray-700' : 'text-red-600'}`}>
+                        {performance.Backtest.strategy_sharpe?.toFixed(2)}
+                      </span>
                     </div>
                     <div className="flex justify-between text-xs">
                       <span className="text-gray-500">Max Drawdown</span>
@@ -213,11 +217,15 @@ export default function Dashboard() {
                     <div className="mt-3 pt-3 border-t border-gray-100">
                       <div className="flex justify-between text-sm mb-1">
                         <span className="text-gray-600 font-semibold">Buy & Hold Return</span>
-                        <span className="font-bold text-blue-600">{performance.Backtest.buy_and_hold_return?.toFixed(1)}%</span>
+                        <span className={`font-bold ${performance.Backtest.buy_and_hold_return >= 0 ? 'text-blue-600' : 'text-red-600'}`}>
+                          {performance.Backtest.buy_and_hold_return?.toFixed(1)}%
+                        </span>
                       </div>
                       <div className="flex justify-between text-xs">
                         <span className="text-gray-500">Sharpe Ratio</span>
-                        <span className="font-medium text-gray-700">{performance.Backtest.buy_and_hold_sharpe?.toFixed(2)}</span>
+                        <span className={`font-medium ${performance.Backtest.buy_and_hold_sharpe >= 0 ? 'text-gray-700' : 'text-red-600'}`}>
+                          {performance.Backtest.buy_and_hold_sharpe?.toFixed(2)}
+                        </span>
                       </div>
                       <div className="flex justify-between text-xs">
                         <span className="text-gray-500">Max Drawdown</span>

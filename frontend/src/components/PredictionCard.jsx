@@ -61,20 +61,20 @@ export default function PredictionCard({ prediction }) {
         {prediction.predicted_price && (
           <div className="mt-4 pt-4 border-t border-gray-100 flex justify-between items-center">
             {prediction.models_agree ? (
-              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                Models Agree (Price supports Direction)
+              <span className="inline-flex items-center px-2.5 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
+                ✓ Price momentum supports direction
               </span>
             ) : (
-              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                Models Disagree
+              <span className="inline-flex items-center px-2.5 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800">
+                ↹ Divergent price signal
               </span>
             )}
           </div>
         )}
         
         {!prediction.models_agree && prediction.warning && (
-          <div className="mt-3 text-xs text-yellow-700 bg-yellow-50 p-2 rounded">
-            {prediction.warning}
+          <div className="mt-3 text-xs text-gray-500 bg-gray-50 p-3 rounded border border-gray-100">
+            <strong>Analyst Note:</strong> The primary classifier detects an {prediction.prediction} pattern, but the secondary price regressor estimates a target of ₹{prediction.predicted_price.toLocaleString(undefined, { minimumFractionDigits: 2 })}, suggesting potential volatility.
           </div>
         )}
 
