@@ -161,31 +161,8 @@ export default function Dashboard() {
                 <PredictionCard 
                   prediction={todayPrediction} 
                   title="Today's Prediction (Intraday)" 
+                  intradayPredictions={intradayPredictions}
                 />
-              )}
-              
-              {intradayPredictions && (
-                <div className="bg-white p-4 rounded-lg shadow border border-gray-100">
-                  <h3 className="text-sm font-medium text-gray-900 mb-3">High-Frequency Scalping (Live)</h3>
-                  <div className="grid grid-cols-3 gap-2">
-                    {['5min', '8min', '10min'].map(interval => {
-                      const pred = intradayPredictions[interval];
-                      if (!pred || pred.error) return null;
-                      const isUp = pred.prediction === 'UP';
-                      return (
-                        <div key={interval} className={`p-2 rounded text-center border ${isUp ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}>
-                          <div className="text-xs font-semibold text-gray-500 mb-1">{interval}</div>
-                          <div className={`text-lg font-bold ${isUp ? 'text-green-700' : 'text-red-700'}`}>
-                            {pred.prediction}
-                          </div>
-                          <div className="text-[10px] text-gray-500 mt-1">
-                            {pred.target_time} ({(pred.confidence * 100).toFixed(0)}%)
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
               )}
               
               <PredictionCard prediction={prediction} />

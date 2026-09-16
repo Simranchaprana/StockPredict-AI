@@ -1,7 +1,7 @@
 import React from 'react';
 import { TrendingUp, TrendingDown, AlertCircle } from 'lucide-react';
 
-export default function PredictionCard({ prediction, title = "Next-Day Prediction (AI Model)" }) {
+export default function PredictionCard({ prediction, title = "Next-Day Prediction (AI Model)", intradayPredictions = null }) {
   if (!prediction) return null;
 
   if (prediction.error) {
@@ -20,7 +20,7 @@ export default function PredictionCard({ prediction, title = "Next-Day Predictio
   const confidencePct = (prediction.confidence * 100).toFixed(1);
 
   return (
-    <div className="bg-white rounded-lg shadow border border-gray-100 overflow-hidden">
+    <div className="bg-white rounded-lg shadow border border-gray-100 overflow-hidden mb-6">
       <div className="px-6 py-5">
         <h3 className="text-lg leading-6 font-medium text-gray-900 mb-1">
           {title}
@@ -72,6 +72,30 @@ export default function PredictionCard({ prediction, title = "Next-Day Predictio
           </div>
         )}
         
+        {intradayPredictions && (
+          <div className="mt-4 pt-4 border-t border-gray-100">
+            <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Live Scalping Targets</h4>
+            <div className="grid grid-cols-3 gap-2">
+              {['5min', '8min', '10min'].map(interval => {
+                const pred = intradayPredictions[interval];
+                if (!pred || pred.error) return null;
+                const isPredUp = pred.prediction === 'UP';
+                return (
+                  <div key={interval} className={`p-2 rounded text-center border ${isPredUp ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}>
+                    <div className="text-[10px] font-bold text-gray-500 mb-0.5">{interval}</div>
+                    <div className={`text-sm font-bold ${isPredUp ? 'text-green-700' : 'text-red-700'}`}>
+                      {pred.prediction}
+                    </div>
+                    <div className="text-[9px] text-gray-500 mt-0.5">
+                      {pred.target_time} ({(pred.confidence * 100).toFixed(0)}%)
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
         {!prediction.models_agree && prediction.warning && (
           <div className="mt-3 text-xs text-gray-500 bg-gray-50 p-3 rounded border border-gray-100">
             <strong>Analyst Note:</strong> The primary classifier detects an {prediction.prediction} pattern, but the secondary price regressor estimates a target of ₹{prediction.predicted_price.toLocaleString(undefined, { minimumFractionDigits: 2 })}, suggesting potential volatility.
