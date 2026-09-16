@@ -53,7 +53,15 @@ def get_stock_history(symbol: str, period: str = "1y"):
         
     # Convert datetime index to string format for JSON serialization
     df.index = df.index.strftime('%Y-%m-%d %H:%M:%S')
-    df_reset = df.reset_index().rename(columns={'Date': 'date', 'Close': 'close', 'Open': 'open', 'High': 'high', 'Low': 'low', 'Volume': 'volume'})
+    df_reset = df.reset_index().rename(columns={
+        'Date': 'date', 
+        'Datetime': 'date',
+        'Close': 'close', 
+        'Open': 'open', 
+        'High': 'high', 
+        'Low': 'low', 
+        'Volume': 'volume'
+    })
     
     # Fill nan with None for JSON
     df_reset = df_reset.replace({float('nan'): None})
