@@ -157,12 +157,38 @@ export default function Dashboard() {
             </div>
 
             <div className="space-y-6">
-              {todayPrediction && (
-                <PredictionCard 
-                  prediction={todayPrediction} 
-                  title="Today's Prediction (Intraday)" 
-                  intraday={intradayPredictions}
-                />
+              {intradayPredictions && (
+                <div className="bg-white p-6 rounded-lg shadow border border-gray-100">
+                  <div className="mb-4">
+                    <h3 className="text-lg leading-6 font-medium text-gray-900 mb-1">
+                      Today's Prediction (Live Scalping)
+                    </h3>
+                    <p className="text-sm text-gray-500">
+                      Real-time high-frequency AI predictions for the next few minutes.
+                    </p>
+                  </div>
+                  <div className="grid grid-cols-3 gap-3">
+                    {['5min', '8min', '10min'].map(interval => {
+                      const pred = intradayPredictions[interval];
+                      if (!pred || pred.error) return null;
+                      const isUp = pred.prediction === 'UP';
+                      return (
+                        <div key={interval} className={`p-3 rounded-lg text-center border ${isUp ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}>
+                          <div className="text-xs font-semibold text-gray-600 mb-2 uppercase tracking-wider">{interval}</div>
+                          <div className={`text-2xl font-bold ${isUp ? 'text-green-600' : 'text-red-600'}`}>
+                            {pred.prediction}
+                          </div>
+                          <div className="text-xs text-gray-500 mt-2 font-medium">
+                            Target: {pred.target_time}
+                          </div>
+                          <div className="text-[10px] text-gray-400 mt-1">
+                            {(pred.confidence * 100).toFixed(1)}% confidence
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
               )}
               
               <PredictionCard prediction={prediction} />
