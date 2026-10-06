@@ -11,7 +11,7 @@ from src.api.predict import predict_next_day, get_model_metrics
 from src.models.intraday import train_and_predict_intraday
 from src.api.database import models
 from src.api.database.database import engine, SessionLocal
-from fastapi import Depends
+from fastapi import Depends, Path
 from sqlalchemy.orm import Session
 
 # Fix database db path since it might try to create it in the old location
@@ -39,7 +39,7 @@ def read_root():
     return {"status": "ok", "message": "Stock Prediction API is running"}
 
 @app.get("/api/stock/{symbol}")
-def get_stock_info(symbol: str):
+def get_stock_info(symbol: str = Path(..., pattern=r"^[A-Za-z0-9.\-^=]{1,15}$")):
     data = get_latest_price(symbol)
     if not data:
         raise HTTPException(status_code=404, detail="Stock symbol not found or no data available")

@@ -48,7 +48,7 @@ def train_models(symbol=None):
     y_reg = train_df['Next_Return']
     
     n_splits = config.get('validation', {}).get('n_splits', 5)
-    tscv = TimeSeriesSplit(n_splits=n_splits)
+    tscv = TimeSeriesSplit(n_splits=n_splits, gap=1)
     
     from sklearn.pipeline import make_pipeline
     from sklearn.preprocessing import StandardScaler
@@ -162,7 +162,7 @@ def train_models(symbol=None):
     # Backtest simulation with threshold (BUY > 0.65, SELL < 0.35)
     last_train_idx, last_test_idx = list(tscv.split(X))[-1]
     X_test_backtest = X.iloc[last_test_idx]
-    y_test_backtest_actual_returns = train_df.iloc[last_test_idx]['Daily_Return']
+    y_test_backtest_actual_returns = train_df.iloc[last_test_idx]['Next_Return']
     
     xgb_classifier_backtest = XGBClassifier(**xgb_params)
     xgb_classifier_backtest.fit(X.iloc[last_train_idx], y_class.iloc[last_train_idx])

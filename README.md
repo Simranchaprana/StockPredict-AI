@@ -12,7 +12,6 @@ A full-stack web application that fetches historical and real-time stock market 
 - [Features](#features)
 - [Tech Stack](#tech-stack)
 - [System Architecture](#system-architecture)
-- [Project Structure](#project-structure)
 - [Getting Started](#getting-started)
 - [API Reference](#api-reference)
 - [Machine Learning Approach](#machine-learning-approach)
@@ -118,22 +117,27 @@ git clone https://github.com/Simranchaprana/StockPredict-AI.git
 cd StockPredict-AI
 ```
 
-### 2. Backend setup
+### 2. Backend & ML Setup
 
 ```bash
-cd backend
-python -m venv venv
-source venv/bin/activate        # Windows: venv\Scripts\activate
+# Create and activate virtual environment
+python -m venv .venv
+source .venv/bin/activate        # Windows: .venv\Scripts\activate
+
+# Install dependencies
 pip install -r requirements.txt
-uvicorn main:app --reload --port 8000
+
+# Start the FastAPI Server
+uvicorn src.api.main:app --reload --port 8000
 ```
 
-Backend runs at `http://localhost:8000` — interactive API docs at `http://localhost:8000/docs`
+Backend runs at `http://localhost:8000` — interactive API docs at `http://localhost:8000/docs`. 
+**Note:** You must search for a stock on the frontend to trigger the on-the-fly model training pipeline for that specific ticker.
 
-### 3. Frontend setup
+### 3. Frontend Setup
 
 ```bash
-cd frontend
+cd src/dashboard
 npm install
 npm run dev -- --port 5173
 ```
@@ -153,12 +157,14 @@ Frontend runs at `http://localhost:5173`
 | GET | `/api/predict/{symbol}` | Next-day direction + confidence |
 | GET | `/api/performance/{symbol}` | Model accuracy/precision/recall/F1/ROC-AUC + backtest results |
 | GET | `/api/history_logs/{symbol}` | Retrieves prediction history logged in SQLite |
+| GET | `/api/news/{symbol}` | Fetches top 5 live financial news headlines via yfinance |
+| GET | `/api/watchlist` | Fetches live pricing for major global indices/commodities |
 
 ---
 
 ## Machine Learning Approach
 
-1. **Intraday Live Scalping (NEW)**: Fetches up to 7 days of 1-minute interval data, resamples to target frequencies, and trains a lightweight Random Forest dynamically to predict immediate momentum shifts.
+1. **Intraday Live Scalping**: Fetches up to 7 days of 1-minute interval data, resamples to target frequencies, and trains a lightweight Random Forest dynamically to predict immediate momentum shifts.
 2. **Next-Day Historical Data**: 5 years of daily OHLCV data via `yfinance`.
 3. **Feature engineering**: daily returns, SMA(20/50/200), EMA(20/50), RSI, MACD, rolling volatility, momentum, high-low spread.
 4. **Target**: `1` if next day's close > today's close, else `0` (direction classification).
@@ -170,11 +176,11 @@ Frontend runs at `http://localhost:5173`
 
 ## Model Performance
 
-Because this platform evaluates models using **TimeSeriesSplit** (which strictly respects chronological order to prevent data leakage) and simulates a trading strategy on unseen data, the performance metrics are highly realistic. 
+Because this platform evaluates models using **TimeSeriesSplit** (which strictly respects chronological order to prevent data leakage) and simulates a trading strategy on unseen data, the performance metrics are highly realistic. The baseline accuracy for majority-class prediction in trending markets is typically around 52-55%.
 
 Run the application and view the **Dashboard Tabs** for any ticker. The dashboard dynamically displays:
-- Cross-validated **Accuracy, Precision, Recall, F1 Score, and ROC-AUC** for both Random Forest and Logistic Regression.
-- An honest **Backtest** comparing the model's UP-signal strategy against a standard Buy & Hold strategy (Win Rate, Max Drawdown, Sharpe Ratio).
+- Cross-validated **Accuracy, Precision, Recall, F1 Score, and ROC-AUC** for the best performing model.
+- An honest **Backtest** comparing the model's UP-signal strategy against a standard Buy & Hold strategy.
 - **Prediction History Log** comparing the model's past Next-Day predictions against what actual direction the stock ultimately went.
 
 ---
