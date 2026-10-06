@@ -17,7 +17,16 @@ from sqlalchemy.orm import Session
 # Fix database db path since it might try to create it in the old location
 models.Base.metadata.create_all(bind=engine)
 
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
+from fastapi import Request
+
+limiter = Limiter(key_func=get_remote_address)
+
 app = FastAPI(title="Stock Prediction API")
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 def get_db():
     db = SessionLocal()
@@ -35,18 +44,21 @@ app.add_middleware(
 )
 
 @app.get("/")
-def read_root():
+@limiter.limit("60/minute")
+def read_root(request: Request):
     return {"status": "ok", "message": "Stock Prediction API is running"}
 
 @app.get("/api/stock/{symbol}")
-def get_stock_info(symbol: str = Path(..., pattern=r"^[A-Za-z0-9.\-^=]{1,15}$")):
+@limiter.limit("20/minute")
+def get_stock_info(request: Request, symbol: str = Path(..., pattern=r"^[A-Za-z0-9.\-^=]{1,15}$")):
     data = get_latest_price(symbol)
     if not data:
         raise HTTPException(status_code=404, detail="Stock symbol not found or no data available")
     return data
 
 @app.get("/api/history/{symbol}")
-def get_stock_history(symbol: str, period: str = "1y"):
+@limiter.limit("20/minute")
+def get_stock_history(request: Request, symbol: str, period: str = "1y"):
     df = fetch_stock_data(symbol, period=period)
     if df.empty:
         raise HTTPException(status_code=404, detail="No historical data found")
@@ -66,7 +78,8 @@ def get_stock_history(symbol: str, period: str = "1y"):
     return df_reset.to_dict(orient="records")
 
 @app.get("/api/indicators/{symbol}")
-def get_stock_indicators(symbol: str):
+@limiter.limit("20/minute")
+def get_stock_indicators(request: Request, symbol: str):
     df = fetch_stock_data(symbol, period="1y")
     if df.empty:
         raise HTTPException(status_code=404, detail="No historical data found")
@@ -119,7 +132,8 @@ def get_stock_indicators(symbol: str):
     }
 
 @app.get("/api/predict/{symbol}")
-def get_prediction(symbol: str, db: Session = Depends(get_db)):
+@limiter.limit("10/minute")
+def get_prediction(request: Request, symbol: str, db: Session = Depends(get_db)):
     try:
         prediction_data = predict_next_day(symbol)
         if not prediction_data:
@@ -144,7 +158,8 @@ def get_prediction(symbol: str, db: Session = Depends(get_db)):
         raise HTTPException(status_code=500, detail="Model not trained yet")
 
 @app.get("/api/predict_intraday/{symbol}")
-def get_intraday_prediction(symbol: str):
+@limiter.limit("10/minute")
+def get_intraday_prediction(request: Request, symbol: str):
     try:
         predictions = train_and_predict_intraday(symbol)
         if "error" in predictions:
@@ -154,19 +169,22 @@ def get_intraday_prediction(symbol: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/api/performance/{symbol}")
-def get_performance(symbol: str):
+@limiter.limit("20/minute")
+def get_performance(request: Request, symbol: str):
     metrics = get_model_metrics(symbol)
     if not metrics:
         raise HTTPException(status_code=404, detail="Metrics not found. Train the model first.")
     return metrics
 
 @app.get("/api/history_logs/{symbol}")
-def get_history_logs(symbol: str, db: Session = Depends(get_db)):
+@limiter.limit("20/minute")
+def get_history_logs(request: Request, symbol: str, db: Session = Depends(get_db)):
     logs = db.query(models.PredictionLog).filter(models.PredictionLog.symbol == symbol).order_by(models.PredictionLog.date.desc()).limit(10).all()
     return logs
 
 @app.get("/api/news/{symbol}")
-def get_news(symbol: str):
+@limiter.limit("20/minute")
+def get_news(request: Request, symbol: str):
     from src.ingestion.news import fetch_live_news
     try:
         # Use SPY as a proxy for general market news if symbol is 'market'
@@ -189,7 +207,8 @@ def get_news(symbol: str):
         return []
 
 @app.get("/api/watchlist")
-def get_watchlist():
+@limiter.limit("20/minute")
+def get_watchlist(request: Request):
     # Fast endpoint just to get latest price and change for global watchlist
     import yfinance as yf
     symbols = ['^NSEI', 'SPY', 'GC=F', 'CL=F', 'BTC-USD']

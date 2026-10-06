@@ -2,7 +2,16 @@ import yfinance as yf
 import pandas as pd
 from datetime import datetime, timedelta
 from src.config import config
+from cachetools import cached, TTLCache
 
+# Cache stock history for 5 minutes (300 seconds) to prevent yfinance rate limits
+history_cache = TTLCache(maxsize=100, ttl=300)
+# Cache intraday data for 1 minute (60 seconds)
+intraday_cache = TTLCache(maxsize=100, ttl=60)
+# Cache latest price for 30 seconds
+price_cache = TTLCache(maxsize=200, ttl=30)
+
+@cached(cache=history_cache)
 def fetch_stock_data(symbol: str, period: str = "5y") -> pd.DataFrame:
     try:
         ticker = yf.Ticker(symbol)
@@ -21,6 +30,7 @@ def fetch_stock_data(symbol: str, period: str = "5y") -> pd.DataFrame:
     df = df.sort_index(ascending=True)
     return df
 
+@cached(cache=history_cache)
 def fetch_market_context(symbol: str, target_index: pd.DatetimeIndex, period: str = "5y") -> pd.DataFrame:
     """
     Fetches broad index, sector index, VIX, and FX data mapped to the symbol in config.yaml.
@@ -78,6 +88,7 @@ def fetch_market_context(symbol: str, target_index: pd.DatetimeIndex, period: st
     
     return aligned_context
 
+@cached(cache=intraday_cache)
 def fetch_intraday_data(symbol: str) -> pd.DataFrame:
     try:
         ticker = yf.Ticker(symbol)
@@ -93,6 +104,7 @@ def fetch_intraday_data(symbol: str) -> pd.DataFrame:
     df = df.sort_index(ascending=True)
     return df
 
+@cached(cache=price_cache)
 def get_latest_price(symbol: str):
     try:
         ticker = yf.Ticker(symbol)
