@@ -1,0 +1,125 @@
+import os
+import joblib
+import pandas as pd
+import sys
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from src.ingestion.fetch import fetch_stock_data, fetch_market_context
+from src.ingestion.news import fetch_live_news, fetch_historical_sentiment
+from src.sentiment.score import SentimentScorer
+from src.features.build import prepare_features, FEATURE_COLS
+from src.validation.walk_forward import train_models
+
+MODEL_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "models", "saved_models")
+
+def predict_next_day(symbol: str):
+    classifier_path = os.path.join(MODEL_DIR, f"xgb_classifier_{symbol}.pkl")
+    regressor_path = os.path.join(MODEL_DIR, f"rf_regressor_{symbol}.pkl")
+    
+    # Auto-train if models for this symbol don't exist
+    if not os.path.exists(classifier_path) or not os.path.exists(regressor_path):
+        try:
+            train_models(symbol)
+        except Exception as e:
+            return {"error": f"Failed to train model for {symbol}: {str(e)}"}
+            
+    classifier = joblib.load(classifier_path)
+    regressor = joblib.load(regressor_path)
+    
+    df = fetch_stock_data(symbol, period="1y")
+    if df.empty:
+        return {"error": f"No data found for {symbol}"}
+        
+    context_df = fetch_market_context(symbol, df.index, period="1y")
+    if not context_df.empty:
+        df = pd.concat([df, context_df], axis=1)
+        
+    sentiment_df = fetch_historical_sentiment(symbol, df.index)
+    if not sentiment_df.empty:
+        df = pd.concat([df, sentiment_df], axis=1)
+        
+    # Fetch live sentiment for the most recent prediction
+    scorer = SentimentScorer()
+    live_news = fetch_live_news(symbol)
+    live_sentiment = scorer.aggregate_daily_sentiment(live_news)
+    df.loc[df.index[-1], 'Sentiment_Score'] = live_sentiment
+        
+    df = prepare_features(df)
+    
+    active_features = [col for col in FEATURE_COLS if col in df.columns]
+    
+    def generate_prediction_for_row(row_idx):
+        features = df[active_features].iloc[[row_idx]]
+        
+        if features.isnull().values.any():
+            return None
+            
+        pred_class = classifier.predict(features)[0]
+        probabilities = classifier.predict_proba(features)[0]
+        
+        prob_up = probabilities[1]
+        if prob_up >= 0.65:
+            direction = "BUY"
+            confidence = prob_up
+        elif prob_up <= 0.35:
+            direction = "SELL"
+            confidence = probabilities[0]
+        else:
+            direction = "HOLD"
+            confidence = max(prob_up, probabilities[0])
+        
+        predicted_return = regressor.predict(features)[0]
+        current_price = df['Close'].iloc[row_idx]
+        predicted_price = current_price * (1 + predicted_return)
+        
+        date_dt = features.index[0]
+        date_str = date_dt.strftime('%Y-%m-%d')
+        days_to_add = 3 if date_dt.weekday() == 4 else 1
+        target_date_str = (date_dt + pd.Timedelta(days=days_to_add)).strftime('%Y-%m-%d')
+
+        price_implied_direction = "UP" if predicted_price > current_price else "DOWN"
+        models_agree = (direction == price_implied_direction)
+        
+        warning = None
+        if not models_agree:
+            warning = f"Classifier predicts {direction} but Regressor price target (₹{predicted_price:.2f}) implies {price_implied_direction}. Treat with caution."
+
+        return {
+            "symbol": symbol,
+            "prediction": direction,
+            "predicted_price": round(predicted_price, 2),
+            "confidence": round(confidence, 2),
+            "model": "XGBoost ML",
+            "latest_data_date": date_str,
+            "target_date": target_date_str,
+            "models_agree": models_agree,
+            "warning": warning
+        }
+
+    next_day_prediction = generate_prediction_for_row(-1)
+    
+    today_prediction = None
+    if len(df) >= 2:
+        today_prediction = generate_prediction_for_row(-2)
+
+    importances_dict = {}
+    base_clf = classifier
+    if hasattr(classifier, 'calibrated_classifiers_'):
+        base_clf = classifier.calibrated_classifiers_[0].estimator
+
+    if hasattr(base_clf, 'feature_importances_'):
+        importances = base_clf.feature_importances_
+        sorted_idx = importances.argsort()[::-1][:10]
+        importances_dict = {active_features[i]: round(float(importances[i]), 4) for i in sorted_idx}
+
+    return {
+        "next_day_prediction": next_day_prediction,
+        "today_prediction": today_prediction,
+        "feature_importances": importances_dict
+    }
+    
+def get_model_metrics(symbol: str):
+    metrics_path = os.path.join(MODEL_DIR, f"metrics_{symbol}.joblib")
+    if os.path.exists(metrics_path):
+        return joblib.load(metrics_path)
+    return None
