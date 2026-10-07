@@ -85,14 +85,20 @@ def train_and_predict_intraday(symbol: str, intervals=["5min", "8min", "10min"])
         
         minutes_to_add = int(interval.replace('min', ''))
         
-        # DEMO OVERRIDE: Force UP for a few stocks since markets are currently closed
-        if symbol in ['TCS.NS', 'AAPL', 'TSLA']:
-            pred_class = 1
-            confidence = 0.75 + (minutes_to_add * 0.02)
+        # Determine if market is closed (if latest tick is older than 30 mins)
+        absolute_latest_time = df_1m.index[-1]
+        now = pd.Timestamp.now(tz=absolute_latest_time.tz)
+        if (now - absolute_latest_time).total_seconds() > 30 * 60:
+            # Market is closed, skip returning a live prediction for this interval
+            # Return a special status flag so the frontend knows it's closed
+            predictions[interval] = {
+                "status": "closed",
+                "message": "Market is currently closed."
+            }
+            continue
             
         direction = "UP" if pred_class == 1 else "DOWN"
         
-        absolute_latest_time = df_1m.index[-1]
         target_time = absolute_latest_time + pd.Timedelta(minutes=minutes_to_add)
         
         predictions[interval] = {

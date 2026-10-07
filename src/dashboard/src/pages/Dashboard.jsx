@@ -92,11 +92,29 @@ export default function Dashboard() {
     }
   };
 
+  const isMarketClosed = React.useMemo(() => {
+    if (!history || history.length === 0) return false;
+    const lastDate = new Date(history[history.length - 1].date);
+    const now = new Date();
+    // Assume market is closed if the latest tick is > 30 minutes old
+    return (now - lastDate) > 30 * 60 * 1000;
+  }, [history]);
+
+  const isClosedRef = React.useRef(isMarketClosed);
+  useEffect(() => {
+    isClosedRef.current = isMarketClosed;
+  }, [isMarketClosed]);
+
   useEffect(() => {
     fetchStockData(symbol, chartPeriod);
     
     // Set up real-time polling every 60 seconds (silent background refresh)
     const intervalId = setInterval(() => {
+      // SMART POLLING: If market is closed, don't waste bandwidth polling every 60s
+      if (isClosedRef.current) {
+        console.log("Market is closed. Skipping heavy background poll.");
+        return;
+      }
       fetchStockData(symbol, chartPeriod, true);
     }, 60000);
     
@@ -110,14 +128,6 @@ export default function Dashboard() {
   const handlePeriodChange = (period) => {
     setChartPeriod(period);
   };
-
-  const isMarketClosed = React.useMemo(() => {
-    if (!history || history.length === 0) return false;
-    const lastDate = new Date(history[history.length - 1].date);
-    const now = new Date();
-    // Assume market is closed if the latest tick is > 30 minutes old
-    return (now - lastDate) > 30 * 60 * 1000;
-  }, [history]);
 
   return (
     <div className="min-h-screen bg-gray-50 text-gray-900 pb-12">
@@ -235,14 +245,41 @@ export default function Dashboard() {
                   </div>
                   
                   {isMarketClosed ? (
-                    <div className="p-8 text-center bg-gray-50 rounded-lg border border-dashed border-gray-200">
-                      <div className="text-gray-400 mb-2">
-                        <svg className="w-8 h-8 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    <div className="p-5 bg-gradient-to-br from-indigo-50 to-blue-50 rounded-lg border border-indigo-100">
+                      <div className="flex items-center mb-4">
+                        <svg className="w-6 h-6 text-indigo-600 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                         </svg>
+                        <h4 className="text-md font-bold text-indigo-900">End-of-Day Review Mode</h4>
                       </div>
-                      <p className="text-sm font-medium text-gray-600">Market is currently closed</p>
-                      <p className="text-xs text-gray-500 mt-1">Live scalping predictions will resume when trading opens.</p>
+                      <p className="text-sm text-indigo-800 mb-4">
+                        The live scalping model is offline. Below is the historical tracking of the model's overnight prediction accuracy for {symbol}.
+                      </p>
+                      
+                      {predictionLogs && predictionLogs.length > 0 ? (
+                        <div className="space-y-2">
+                          <div className="text-xs font-bold text-indigo-900 uppercase tracking-wide border-b border-indigo-200 pb-1 mb-2">Recent Prediction Logs</div>
+                          {predictionLogs.slice(0, 3).map((log, i) => {
+                            // Determine accuracy if possible
+                            const wasRight = log.actual_direction === log.predicted_direction;
+                            return (
+                              <div key={i} className="flex justify-between items-center bg-white p-2 rounded shadow-sm text-xs">
+                                <span className="font-medium text-gray-600">{log.prediction_date}</span>
+                                <div>
+                                  <span className="text-gray-500 mr-2">Predicted: <strong className={log.predicted_direction === 'UP' ? 'text-green-600' : 'text-red-600'}>{log.predicted_direction}</strong></span>
+                                  {log.actual_direction && (
+                                    <span className={`px-2 py-0.5 rounded font-bold ${wasRight ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                                      {wasRight ? 'CORRECT' : 'WRONG'}
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      ) : (
+                        <div className="text-xs text-indigo-600 italic">No historical logs available for this ticker yet.</div>
+                      )}
                     </div>
                   ) : (
                     <div className="grid grid-cols-3 gap-3">
