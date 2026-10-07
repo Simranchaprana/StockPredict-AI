@@ -142,6 +142,26 @@ export default function Dashboard() {
         <GlobalWatchlist onSelectSymbol={handleSearch} type="macro" title="Global Macro Command Centre" />
         <GlobalWatchlist onSelectSymbol={handleSearch} type="forex_bonds" title="Forex & Bonds Command Centre" />
 
+        {/* Market Status Banner */}
+        <div className={`mb-6 p-4 rounded-lg flex items-center justify-between border ${isMarketClosed ? 'bg-orange-50 border-orange-200' : 'bg-green-50 border-green-200'}`}>
+          <div className="flex items-center">
+            <div className={`w-3 h-3 rounded-full mr-3 ${isMarketClosed ? 'bg-orange-500' : 'bg-green-500 animate-pulse'}`}></div>
+            <div>
+              <h3 className={`font-bold ${isMarketClosed ? 'text-orange-800' : 'text-green-800'}`}>
+                {isMarketClosed ? 'Market is Currently Closed' : 'Market is Open & Trading'}
+              </h3>
+              <p className={`text-sm ${isMarketClosed ? 'text-orange-700' : 'text-green-700'}`}>
+                {isMarketClosed ? 'All predictions are finalized for the next trading session.' : 'Live scalping predictions are actively updating.'}
+              </p>
+            </div>
+          </div>
+          <div className="text-right hidden sm:block">
+            <span className={`text-xs font-semibold px-2 py-1 rounded-full ${isMarketClosed ? 'bg-orange-100 text-orange-800' : 'bg-green-100 text-green-800'}`}>
+              {isMarketClosed ? 'Awaiting Next Open' : 'Real-Time Sync Active'}
+            </span>
+          </div>
+        </div>
+
         {error && (
           <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 flex items-center">
             <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" /></svg>

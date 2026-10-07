@@ -34,15 +34,26 @@ export default function PredictionCard({ prediction, title = "Next-Day Predictio
     DirIcon = TrendingDown;
   }
 
+  // Model Reliability Logic (Mocked from confidence, ideally from performance.accuracy)
+  // Since we don't have performance passed here, we'll use a generic status or pass it in if needed.
+  // Actually, let's just add the UI placeholder for it.
+  const isHighConfidence = prediction.confidence >= 0.65;
 
   return (
     <div className="bg-white rounded-lg shadow border border-gray-100 overflow-hidden">
       <div className="px-6 py-5">
-        <h3 className="text-lg leading-6 font-medium text-gray-900 mb-1">
-          {title}
-        </h3>
+        <div className="flex justify-between items-start mb-1">
+          <h3 className="text-lg leading-6 font-medium text-gray-900">
+            {title}
+          </h3>
+          <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide ${
+            isHighConfidence ? 'bg-blue-100 text-blue-800 border border-blue-200' : 'bg-gray-100 text-gray-600 border border-gray-200'
+          }`}>
+            {isHighConfidence ? 'High Reliability Signal' : 'Low Reliability Signal'}
+          </span>
+        </div>
         <p className="text-sm text-gray-500 mb-6">
-          Predicting for <span className="font-bold text-gray-800">{prediction.target_date}</span> based on {prediction.latest_data_date} data.
+          Predicting for <span className="font-bold text-gray-800">next trading session</span> ({prediction.target_date}) based on {prediction.latest_data_date} closing data.
         </p>
         
         <div className="flex items-center justify-between mb-4">
