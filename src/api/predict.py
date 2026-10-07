@@ -16,12 +16,9 @@ def predict_next_day(symbol: str):
     classifier_path = os.path.join(MODEL_DIR, f"xgb_classifier_{symbol}.pkl")
     regressor_path = os.path.join(MODEL_DIR, f"rf_regressor_{symbol}.pkl")
     
-    # Auto-train if models for this symbol don't exist
+    # Auto-train is now handled asynchronously by main.py
     if not os.path.exists(classifier_path) or not os.path.exists(regressor_path):
-        try:
-            train_models(symbol)
-        except Exception as e:
-            return {"error": f"Failed to train model for {symbol}: {str(e)}"}
+        return {"error": f"Model not trained yet for {symbol}. It should be training in the background."}
             
     classifier = joblib.load(classifier_path)
     regressor = joblib.load(regressor_path)
@@ -72,6 +69,12 @@ def predict_next_day(symbol: str):
         current_price = df['Close'].iloc[row_idx]
         predicted_price = current_price * (1 + predicted_return)
         
+        # Conformal Prediction Bounds (90% Confidence Interval)
+        conformal_path = os.path.join(MODEL_DIR, f"conformal_q90_{symbol}.pkl")
+        conformal_q90 = joblib.load(conformal_path) if os.path.exists(conformal_path) else 0.0
+        conformal_lower = predicted_price - conformal_q90
+        conformal_upper = predicted_price + conformal_q90
+        
         date_dt = features.index[0]
         date_str = date_dt.strftime('%Y-%m-%d')
         days_to_add = 3 if date_dt.weekday() == 4 else 1
@@ -88,6 +91,8 @@ def predict_next_day(symbol: str):
             "symbol": symbol,
             "prediction": direction,
             "predicted_price": round(predicted_price, 2),
+            "conformal_lower": round(conformal_lower, 2),
+            "conformal_upper": round(conformal_upper, 2),
             "confidence": round(confidence, 2),
             "model": "XGBoost ML",
             "latest_data_date": date_str,

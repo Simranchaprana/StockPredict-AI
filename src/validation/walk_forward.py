@@ -145,6 +145,12 @@ def train_models(symbol=None):
         
         reg_metrics['mae'].append(mean_absolute_error(actual_prices, predicted_prices))
         reg_metrics['r2'].append(r2_score(actual_prices, predicted_prices))
+        
+        # Conformal Prediction: Track absolute pricing errors for confidence bands
+        fold_residuals = np.abs(actual_prices - predicted_prices)
+        if 'residuals' not in reg_metrics:
+            reg_metrics['residuals'] = []
+        reg_metrics['residuals'].extend(fold_residuals.values)
     
     # Train final models on all data
     from sklearn.calibration import CalibratedClassifierCV
@@ -161,6 +167,13 @@ def train_models(symbol=None):
 
     
     os.makedirs(MODEL_DIR, exist_ok=True)
+    
+    # Save Conformal Prediction Bounds (90% Confidence Interval width)
+    if 'residuals' in reg_metrics and len(reg_metrics['residuals']) > 0:
+        conformal_q90 = np.percentile(reg_metrics['residuals'], 90)
+    else:
+        conformal_q90 = 0.0
+    joblib.dump(conformal_q90, os.path.join(MODEL_DIR, f"conformal_q90_{symbol}.pkl"))
     
     joblib.dump(calibrated_rf, os.path.join(MODEL_DIR, f"rf_classifier_{symbol}.pkl"))
     joblib.dump(rf_regressor, os.path.join(MODEL_DIR, f"rf_regressor_{symbol}.pkl"))

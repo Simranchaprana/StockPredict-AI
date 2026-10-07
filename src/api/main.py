@@ -133,10 +133,22 @@ def get_stock_indicators(request: Request, symbol: str):
         "Sentiment_Score": get_safe('Sentiment_Score')
     }
 
+from fastapi import BackgroundTasks
+from fastapi.responses import JSONResponse
+import os
+
 @app.get("/api/predict/{symbol}")
-@limiter.limit("10/minute")
-def get_prediction(request: Request, symbol: str, db: Session = Depends(get_db)):
+@limiter.limit("20/minute") # Increased limit slightly for polling
+def get_prediction(request: Request, symbol: str, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
     try:
+        from src.validation.walk_forward import train_models
+        MODEL_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "models", "saved_models")
+        classifier_path = os.path.join(MODEL_DIR, f"xgb_classifier_{symbol}.pkl")
+        
+        if not os.path.exists(classifier_path):
+            background_tasks.add_task(train_models, symbol)
+            return JSONResponse(status_code=202, content={"status": "training", "message": "Model is training in background... Please wait 15-30s."})
+            
         prediction_data = predict_next_day(symbol)
         if not prediction_data:
             raise HTTPException(status_code=404, detail="Could not generate prediction")

@@ -46,12 +46,20 @@ export default function Dashboard() {
       // Fetch prediction
       try {
         const predResponse = await axios.get(`${API_BASE}/predict/${sym}`);
-        const nextDayData = predResponse.data.next_day_prediction;
-        if (nextDayData && predResponse.data.feature_importances) {
-          nextDayData.feature_importances = predResponse.data.feature_importances;
+        if (predResponse.status === 202 || predResponse.data.status === "training") {
+          setPrediction({ status: "training", message: predResponse.data.message || "Model is training in background..." });
+          setTimeout(() => fetchStockData(sym, period, true), 5000);
+        } else {
+          const nextDayData = predResponse.data.next_day_prediction;
+          if (nextDayData && predResponse.data.feature_importances) {
+            nextDayData.feature_importances = predResponse.data.feature_importances;
+          }
+          if (nextDayData && predResponse.data.shap_values) {
+            nextDayData.shap_values = predResponse.data.shap_values;
+          }
+          setPrediction(nextDayData);
+          setTodayPrediction(predResponse.data.today_prediction);
         }
-        setPrediction(nextDayData);
-        setTodayPrediction(predResponse.data.today_prediction);
       } catch (err) {
         setPrediction({ error: err.response?.data?.detail || err.message });
       }
