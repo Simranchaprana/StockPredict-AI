@@ -94,7 +94,50 @@ export default function PredictionCard({ prediction, title = "Next-Day Predictio
           </div>
         )}
         
-        {prediction.feature_importances && Object.keys(prediction.feature_importances).length > 0 && (
+        {prediction.shap_values && (prediction.shap_values.positive_drivers?.length > 0 || prediction.shap_values.negative_drivers?.length > 0) ? (
+          <div className="mt-5 pt-4 border-t border-gray-100">
+            <h4 className="text-sm font-semibold text-gray-800 mb-3 uppercase tracking-wide">Explainable AI (SHAP Drivers)</h4>
+            <p className="text-xs text-gray-500 mb-3">What pushed the model towards {prediction.prediction}:</p>
+            <div className="space-y-4">
+              {prediction.shap_values.positive_drivers?.length > 0 && (
+                <div>
+                  <h5 className="text-[10px] font-bold text-green-700 uppercase tracking-wider mb-1">Bullish Factors</h5>
+                  <div className="space-y-1">
+                    {prediction.shap_values.positive_drivers.map((driver) => (
+                      <div key={driver.feature} className="flex justify-between items-center text-xs">
+                        <span className="text-gray-700 truncate">{driver.feature}</span>
+                        <div className="flex items-center">
+                           <div className="w-16 bg-gray-100 rounded-full h-1 mr-2 flex justify-end">
+                             <div className="bg-green-500 h-1 rounded-full" style={{ width: `${Math.min(100, driver.impact * 1500)}%` }}></div>
+                           </div>
+                           <span className="text-green-600 font-mono text-[10px]">+{driver.impact.toFixed(3)}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {prediction.shap_values.negative_drivers?.length > 0 && (
+                <div>
+                  <h5 className="text-[10px] font-bold text-red-700 uppercase tracking-wider mb-1">Bearish Factors</h5>
+                  <div className="space-y-1">
+                    {prediction.shap_values.negative_drivers.map((driver) => (
+                      <div key={driver.feature} className="flex justify-between items-center text-xs">
+                        <span className="text-gray-700 truncate">{driver.feature}</span>
+                        <div className="flex items-center">
+                           <div className="w-16 bg-gray-100 rounded-full h-1 mr-2 flex justify-start">
+                             <div className="bg-red-500 h-1 rounded-full" style={{ width: `${Math.min(100, Math.abs(driver.impact) * 1500)}%` }}></div>
+                           </div>
+                           <span className="text-red-600 font-mono text-[10px]">{driver.impact.toFixed(3)}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        ) : prediction.feature_importances && Object.keys(prediction.feature_importances).length > 0 && (
           <div className="mt-5 pt-4 border-t border-gray-100">
             <h4 className="text-sm font-semibold text-gray-800 mb-3 uppercase tracking-wide">Model Diagnostics</h4>
             <p className="text-xs text-gray-500 mb-2">Top driving features for this prediction (XGBoost Split Importance):</p>

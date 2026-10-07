@@ -37,6 +37,18 @@ export default function ModelPerformanceTab({ performance }) {
               <span className="text-xs text-gray-500 font-medium mb-1">Base Accuracy</span>
               <span className="text-xl font-bold text-blue-700">{bestModel.accuracy ? (bestModel.accuracy * 100).toFixed(1) : '0'}%</span>
             </div>
+            {bestModel.balanced_accuracy && (
+            <div className="p-4 flex flex-col items-center justify-center">
+              <span className="text-xs text-gray-500 font-medium mb-1">Balanced Acc.</span>
+              <span className="text-xl font-bold text-blue-700">{(bestModel.balanced_accuracy * 100).toFixed(1)}%</span>
+            </div>
+            )}
+            {bestModel.majority_baseline && (
+            <div className="p-4 flex flex-col items-center justify-center bg-yellow-50/30">
+              <span className="text-xs text-gray-500 font-medium mb-1">Majority Baseline</span>
+              <span className="text-xl font-bold text-yellow-700">{(bestModel.majority_baseline * 100).toFixed(1)}%</span>
+            </div>
+            )}
             <div className="p-4 flex flex-col items-center justify-center">
               <span className="text-xs text-gray-500 font-medium mb-1">Precision</span>
               <span className="text-xl font-bold text-gray-800">{bestModel.precision ? bestModel.precision.toFixed(2) : '0'}</span>
@@ -49,6 +61,12 @@ export default function ModelPerformanceTab({ performance }) {
               <span className="text-xs text-gray-500 font-medium mb-1">F1 Score</span>
               <span className="text-xl font-bold text-gray-800">{bestModel.f1 ? bestModel.f1.toFixed(2) : '0'}</span>
             </div>
+            {bestModel.mcc !== undefined && (
+            <div className="p-4 flex flex-col items-center justify-center">
+              <span className="text-xs text-gray-500 font-medium mb-1">MCC</span>
+              <span className="text-xl font-bold text-purple-700">{bestModel.mcc.toFixed(2)}</span>
+            </div>
+            )}
             <div className="p-4 flex flex-col items-center justify-center">
               <span className="text-xs text-gray-500 font-medium mb-1">ROC-AUC</span>
               <span className="text-xl font-bold text-gray-800">{bestModel.roc_auc ? bestModel.roc_auc.toFixed(2) : 'N/A'}</span>
