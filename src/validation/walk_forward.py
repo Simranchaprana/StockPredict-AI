@@ -92,8 +92,12 @@ def train_models(symbol=None):
             pass
             
         
-        # XGBoost
-        xgb_classifier.fit(X_train, y_train_c)
+        # XGBoost with Noise Filtering (sample weights)
+        # Weight = 0 if absolute return < 0.3%, else 1
+        noise_threshold = 0.003
+        sample_weights = (y_train_r.abs() >= noise_threshold).astype(int)
+        
+        xgb_classifier.fit(X_train, y_train_c, sample_weight=sample_weights)
         xgb_preds = xgb_classifier.predict(X_test)
         xgb_probs = xgb_classifier.predict_proba(X_test)[:, 1]
         xgb_metrics['acc'].append(accuracy_score(y_test_c, xgb_preds))
@@ -217,6 +221,27 @@ def train_models(symbol=None):
     bh_summary = backtest_summary(np.array(equity_curve_bh), np.array(daily_returns_bh))
     strat_summary = backtest_summary(np.array(equity_curve_strategy), np.array(daily_returns_strategy))
     
+    # Statistical Significance (Binomial test against majority baseline)
+    from scipy.stats import binomtest
+    # We use the raw accuracy list to approximate successes in a single fold for the test
+    n_trials = len(y_test_backtest_actual_returns)
+    # Estimate successes based on XGBoost accuracy of the last fold
+    accuracy_last_fold = xgb_metrics['acc'][-1]
+    n_successes = int(round(accuracy_last_fold * n_trials))
+    majority_class_prob = max(y_class.iloc[last_test_idx].mean(), 1 - y_class.iloc[last_test_idx].mean())
+    
+    try:
+        p_value = binomtest(n_successes, n_trials, p=majority_class_prob, alternative='greater').pvalue
+    except Exception:
+        p_value = 1.0
+        
+    if p_value < 0.05 and np.mean(xgb_metrics['acc']) > np.mean(xgb_metrics['maj_baseline']):
+        verdict = "Statistically Significant Edge Detected"
+    elif np.mean(xgb_metrics['acc']) > np.mean(xgb_metrics['maj_baseline']):
+        verdict = "Weak Edge (Not Statistically Significant)"
+    else:
+        verdict = "No Edge (Performs worse than coin-flip/baseline)"
+    
     metrics = {
         "Random Forest": {
             "accuracy": np.mean(rf_metrics['acc']),
@@ -235,7 +260,9 @@ def train_models(symbol=None):
             "f1": np.mean(xgb_metrics['f1']),
             "roc_auc": np.mean(xgb_metrics['roc']) if xgb_metrics['roc'] else 0.5,
             "trade_accuracy": np.mean(xgb_metrics['trade_acc']),
-            "trade_coverage": np.mean(xgb_metrics['trade_cov'])
+            "trade_coverage": np.mean(xgb_metrics['trade_cov']),
+            "p_value": p_value,
+            "verdict": verdict
         },
         "Logistic Regression": {
             "accuracy": np.mean(lr_metrics['acc']),

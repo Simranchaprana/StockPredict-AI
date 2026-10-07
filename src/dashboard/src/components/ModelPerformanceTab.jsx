@@ -25,6 +25,18 @@ export default function ModelPerformanceTab({ performance }) {
         <h3 className="text-sm font-bold text-gray-800 mb-3 uppercase tracking-wide">Directional Classification (Best Model)</h3>
         <p className="text-xs text-gray-500 mb-4">Displaying metrics for the highest accuracy model: <strong className="text-blue-600">{bestModelName}</strong></p>
         
+        {bestModel.verdict && (
+          <div className={`mb-4 p-3 rounded border text-sm font-medium ${
+            bestModel.verdict.includes('Significant') ? 'bg-green-50 border-green-200 text-green-800' :
+            bestModel.verdict.includes('Weak Edge') ? 'bg-yellow-50 border-yellow-200 text-yellow-800' :
+            'bg-red-50 border-red-200 text-red-800'
+          }`}>
+            <span className="font-bold uppercase text-xs mr-2 border-r pr-2 border-current opacity-70">Reality Check</span> 
+            {bestModel.verdict} 
+            {bestModel.p_value !== undefined && <span className="ml-2 opacity-75 font-mono text-xs">(p={bestModel.p_value.toFixed(3)})</span>}
+          </div>
+        )}
+
         <div className="bg-white border border-gray-200 shadow-sm rounded-lg overflow-hidden">
           <div className="grid grid-cols-2 sm:grid-cols-3 divide-x divide-y divide-gray-100">
             {bestModel.trade_accuracy && (
