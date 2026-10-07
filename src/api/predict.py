@@ -103,6 +103,8 @@ def predict_next_day(symbol: str):
         today_prediction = generate_prediction_for_row(-2)
 
     importances_dict = {}
+    shap_values_dict = {}
+    
     base_clf = classifier
     if hasattr(classifier, 'calibrated_classifiers_'):
         base_clf = classifier.calibrated_classifiers_[0].estimator
@@ -111,11 +113,36 @@ def predict_next_day(symbol: str):
         importances = base_clf.feature_importances_
         sorted_idx = importances.argsort()[::-1][:10]
         importances_dict = {active_features[i]: round(float(importances[i]), 4) for i in sorted_idx}
+        
+        # Calculate SHAP for the most recent prediction
+        try:
+            import shap
+            explainer = shap.TreeExplainer(base_clf)
+            shap_vals = explainer.shap_values(df[active_features].iloc[[-1]])
+            
+            # For binary classification, shap_values might be a list (one for each class)
+            # or a single array (for the positive class). XGBoost usually returns single array.
+            if isinstance(shap_vals, list):
+                sv = shap_vals[1][0]
+            else:
+                sv = shap_vals[0]
+                
+            # Get top 5 positive drivers and top 5 negative drivers
+            feature_impacts = [(active_features[i], float(sv[i])) for i in range(len(active_features))]
+            feature_impacts.sort(key=lambda x: x[1], reverse=True)
+            
+            shap_values_dict = {
+                "positive_drivers": [{"feature": k, "impact": round(v, 4)} for k, v in feature_impacts if v > 0][:5],
+                "negative_drivers": [{"feature": k, "impact": round(v, 4)} for k, v in feature_impacts if v < 0][-5:]
+            }
+        except Exception as e:
+            print(f"SHAP calculation error: {e}")
 
     return {
         "next_day_prediction": next_day_prediction,
         "today_prediction": today_prediction,
-        "feature_importances": importances_dict
+        "feature_importances": importances_dict,
+        "shap_values": shap_values_dict
     }
     
 def get_model_metrics(symbol: str):

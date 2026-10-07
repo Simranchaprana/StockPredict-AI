@@ -5,7 +5,7 @@ import pandas as pd
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 from xgboost import XGBClassifier
 from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, roc_auc_score, mean_absolute_error, r2_score
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, roc_auc_score, mean_absolute_error, r2_score, balanced_accuracy_score, matthews_corrcoef
 from sklearn.model_selection import TimeSeriesSplit
 
 import sys
@@ -68,7 +68,7 @@ def train_models(symbol=None):
     xgb_params = config.get('model_params', {}).get('xgboost', {'n_estimators': 100, 'max_depth': 5, 'learning_rate': 0.1, 'random_state': 42})
     xgb_classifier = XGBClassifier(**xgb_params)
     
-    xgb_metrics = {'acc': [], 'prec': [], 'rec': [], 'f1': [], 'roc': [], 'trade_acc': [], 'trade_cov': []}
+    xgb_metrics = {'acc': [], 'prec': [], 'rec': [], 'f1': [], 'roc': [], 'trade_acc': [], 'trade_cov': [], 'bal_acc': [], 'mcc': [], 'maj_baseline': []}
     lr_metrics = {'acc': [], 'prec': [], 'rec': [], 'f1': [], 'roc': []}
     rf_metrics = {'acc': [], 'prec': [], 'rec': [], 'f1': [], 'roc': []}
     reg_metrics = {'mae': [], 'r2': []}
@@ -100,6 +100,9 @@ def train_models(symbol=None):
         xgb_metrics['prec'].append(precision_score(y_test_c, xgb_preds, zero_division=0))
         xgb_metrics['rec'].append(recall_score(y_test_c, xgb_preds, zero_division=0))
         xgb_metrics['f1'].append(f1_score(y_test_c, xgb_preds, zero_division=0))
+        xgb_metrics['bal_acc'].append(balanced_accuracy_score(y_test_c, xgb_preds))
+        xgb_metrics['mcc'].append(matthews_corrcoef(y_test_c, xgb_preds))
+        xgb_metrics['maj_baseline'].append(max(y_test_c.mean(), 1 - y_test_c.mean()))
         try:
             xgb_metrics['roc'].append(roc_auc_score(y_test_c, xgb_probs))
         except ValueError:
@@ -178,23 +181,40 @@ def train_models(symbol=None):
     daily_returns_bh = []
     daily_returns_strategy = []
     
+    # Costs: Slippage (e.g., 0.05%) and Transaction Cost (e.g., STT/Brokerage 0.05%)
+    # Using 0.1% total per trade leg
+    cost_per_trade = config.get('backtest', {}).get('cost_per_trade', 0.001)
+    
+    current_position = 0 # 1 for LONG, -1 for SHORT, 0 for FLAT
+    
     for i, prob in enumerate(probs):
         ret = y_test_backtest_actual_returns.iloc[i]
         bh_ret = ret
         daily_returns_bh.append(bh_ret)
         equity_curve_bh.append(equity_curve_bh[-1] * (1 + bh_ret))
         
-        # BUY/HOLD/SELL Logic
+        # Determine target position based on threshold
         if prob >= 0.65:
-            strat_ret = ret      # BUY
+            target_position = 1
         elif prob <= 0.35:
-            strat_ret = -ret     # SELL (Short)
+            target_position = -1
         else:
-            strat_ret = 0        # HOLD
+            target_position = 0
+            
+        # Calculate strategy return BEFORE costs (based on current position held overnight)
+        strat_ret = current_position * ret
+        
+        # Apply costs if we change position
+        if target_position != current_position:
+            # Simple assumption: we pay cost_per_trade on the full position size
+            strat_ret -= cost_per_trade * abs(target_position - current_position)
+            
+        current_position = target_position
             
         daily_returns_strategy.append(strat_ret)
         equity_curve_strategy.append(equity_curve_strategy[-1] * (1 + strat_ret))
-        bh_summary = backtest_summary(np.array(equity_curve_bh), np.array(daily_returns_bh))
+        
+    bh_summary = backtest_summary(np.array(equity_curve_bh), np.array(daily_returns_bh))
     strat_summary = backtest_summary(np.array(equity_curve_strategy), np.array(daily_returns_strategy))
     
     metrics = {
@@ -207,6 +227,9 @@ def train_models(symbol=None):
         },
         "XGBoost": {
             "accuracy": np.mean(xgb_metrics['acc']),
+            "balanced_accuracy": np.mean(xgb_metrics['bal_acc']),
+            "mcc": np.mean(xgb_metrics['mcc']),
+            "majority_baseline": np.mean(xgb_metrics['maj_baseline']),
             "precision": np.mean(xgb_metrics['prec']),
             "recall": np.mean(xgb_metrics['rec']),
             "f1": np.mean(xgb_metrics['f1']),

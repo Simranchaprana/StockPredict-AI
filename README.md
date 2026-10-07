@@ -42,9 +42,10 @@ Retail investors and students often need to check multiple platforms to view his
 - ⏱️ **Live Scalping Predictions** — High-frequency predictions (5-min, 8-min, 10-min) generated on the fly from the latest 1-minute ticker data.
 - 📉 **Technical indicators** — Ratios and normalized metrics for SMA(20/50/200), EMA(20/50), RSI, MACD, Bollinger Bands, rolling volatility, VWAP, ADX, and more.
 - 🤖 **Next-Day ML Prediction** — Next-day direction (UP/DOWN) with an XGBoost-calibrated confidence score, and optional Random Forest next-day price target.
-- 🏆 **Best Model Performance View** — Dynamically evaluates trained models and presents a sleek UI card showing only the highest-accuracy model's metrics (Accuracy, Precision, Recall, F1, Trade Coverage).
+- 🧠 **Explainable AI (XAI)** — Live SHAP value calculation for every prediction, showing exactly which technical features (positive/negative drivers) pushed the model to say UP or DOWN.
+- 🏆 **Best Model Performance View** — Dynamically evaluates trained models and presents a sleek UI card showing rigorous metrics: Accuracy, Precision, Recall, F1, **Balanced Accuracy**, and **Matthews Correlation Coefficient (MCC)** against a Majority-Class Baseline.
 - 🕰️ **Prediction history** — Logs past predictions vs. actual outcomes for transparency.
-- 💰 **Backtesting module** — Simulates a threshold-based ML strategy (e.g., BUY > 65% conf, SELL < 35% conf) against a fixed starting capital, reported alongside buy-and-hold for honest comparison.
+- 💰 **Backtesting module** — Simulates a threshold-based ML strategy (e.g., BUY > 65% conf, SELL < 35% conf) against a fixed starting capital, factoring in **Transaction Costs and Slippage**, and reports **Sharpe Ratio** alongside buy-and-hold for honest comparison.
 - 🛡️ **Enterprise-Grade Backend** — Built with FastAPI, featuring strict path validation, TTLCache for upstream API calls, `slowapi` rate limiting, and a strict `TimeSeriesSplit(gap=1)` no-leakage ML pipeline.
 - 🐳 **Docker Ready** — Fully containerized with a multi-stage Dockerfile and `docker-compose.yml` for instant zero-drift setup.
 

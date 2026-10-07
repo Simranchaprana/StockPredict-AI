@@ -13,3 +13,4 @@ PyYAML
 vaderSentiment
 cachetools>=5.3.0
 slowapi>=0.1.9
+shap>=0.44.1
