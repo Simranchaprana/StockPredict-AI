@@ -1,23 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 
-export default function GlobalWatchlist({ onSelectSymbol }) {
+export default function GlobalWatchlist({ onSelectSymbol, type = "macro", title = "Global Macro Command Centre" }) {
   const [watchlist, setWatchlist] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchWatchlist = async () => {
       try {
-        const response = await axios.get('http://localhost:8000/api/watchlist');
+        const response = await axios.get(`http://localhost:8000/api/watchlist?type=${type}`);
         setWatchlist(response.data);
       } catch (err) {
-        console.error("Failed to load watchlist", err);
+        console.error(`Failed to load ${type} watchlist`, err);
       } finally {
         setLoading(false);
       }
     };
     fetchWatchlist();
-  }, []);
+  }, [type]);
 
   if (loading) {
     return (
@@ -33,7 +33,7 @@ export default function GlobalWatchlist({ onSelectSymbol }) {
 
   return (
     <div className="mb-6">
-      <h2 className="text-sm font-bold text-gray-800 mb-3 uppercase tracking-wide">Global Macro Command Centre</h2>
+      <h2 className="text-sm font-bold text-gray-800 mb-3 uppercase tracking-wide">{title}</h2>
       <div className="flex overflow-x-auto pb-4 space-x-4 hide-scrollbar cursor-pointer">
         {watchlist.map((item) => (
           <div 
@@ -45,8 +45,8 @@ export default function GlobalWatchlist({ onSelectSymbol }) {
               <span className="font-bold text-gray-900 truncate">{item.name}</span>
             </div>
             <div className="text-lg font-black text-gray-800 mb-1">
-              {item.symbol === 'BTC-USD' ? '$' : item.symbol === 'GC=F' || item.symbol === 'CL=F' || item.symbol === 'SPY' ? '$' : '₹'}
-              {item.price.toFixed(2)}
+              {item.symbol === 'BTC-USD' || item.symbol === 'DX-Y.NYB' ? '$' : item.symbol === 'GC=F' || item.symbol === 'CL=F' || item.symbol === 'SPY' || item.symbol === 'EURUSD=X' ? '$' : item.symbol === '^TNX' || item.symbol === '^VIX' ? '' : '₹'}
+              {item.price.toFixed(2)}{item.symbol === '^TNX' || item.symbol === '^VIX' ? '%' : ''}
             </div>
             <div className={`text-xs font-bold ${item.isUp ? 'text-green-600' : 'text-red-600'} flex items-center`}>
               {item.isUp ? (

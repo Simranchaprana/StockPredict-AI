@@ -210,10 +210,29 @@ def get_news(request: Request, symbol: str):
 
 @app.get("/api/watchlist")
 @limiter.limit("20/minute")
-def get_watchlist(request: Request):
+def get_watchlist(request: Request, type: str = "macro"):
     # Fast endpoint just to get latest price and change for global watchlist
     import yfinance as yf
-    symbols = ['^NSEI', 'SPY', 'GC=F', 'CL=F', 'BTC-USD']
+    
+    if type == "macro":
+        symbols = ['^NSEI', 'SPY', 'GC=F', 'CL=F', 'BTC-USD']
+        name_map = {
+            '^NSEI': 'NIFTY 50',
+            'SPY': 'S&P 500',
+            'GC=F': 'Gold',
+            'CL=F': 'Crude Oil',
+            'BTC-USD': 'Bitcoin'
+        }
+    else:
+        symbols = ['DX-Y.NYB', 'INR=X', 'EURUSD=X', '^TNX', '^VIX']
+        name_map = {
+            'DX-Y.NYB': 'US Dollar Index',
+            'INR=X': 'USD/INR',
+            'EURUSD=X': 'EUR/USD',
+            '^TNX': 'US 10-Year Yield',
+            '^VIX': 'VIX Volatility'
+        }
+        
     results = []
     try:
         # Use yf.download or ThreadPoolExecutor for speed
@@ -225,13 +244,6 @@ def get_watchlist(request: Request):
                 prev = info.get('previousClose', 0)
                 change = price - prev
                 pct_change = (change / prev * 100) if prev else 0
-                name_map = {
-                    '^NSEI': 'NIFTY 50',
-                    'SPY': 'S&P 500',
-                    'GC=F': 'Gold',
-                    'CL=F': 'Crude Oil',
-                    'BTC-USD': 'Bitcoin'
-                }
                 results.append({
                     "symbol": sym,
                     "name": name_map.get(sym, sym),

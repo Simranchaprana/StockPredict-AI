@@ -139,7 +139,8 @@ export default function Dashboard() {
           </div>
         </div>
 
-        <GlobalWatchlist onSelectSymbol={handleSearch} />
+        <GlobalWatchlist onSelectSymbol={handleSearch} type="macro" title="Global Macro Command Centre" />
+        <GlobalWatchlist onSelectSymbol={handleSearch} type="forex_bonds" title="Forex & Bonds Command Centre" />
 
         {error && (
           <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 flex items-center">
