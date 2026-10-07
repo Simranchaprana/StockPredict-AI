@@ -11,8 +11,9 @@ from src.api.predict import predict_next_day, get_model_metrics
 from src.models.intraday import train_and_predict_intraday
 from src.api.database import models
 from src.api.database.database import engine, SessionLocal
-from fastapi import Depends, Path
+from fastapi import Depends, Path, Request
 from sqlalchemy.orm import Session
+from src.api.auth import router as auth_router
 
 # Fix database db path since it might try to create it in the old location
 models.Base.metadata.create_all(bind=engine)
@@ -20,13 +21,14 @@ models.Base.metadata.create_all(bind=engine)
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
-from fastapi import Request
 
 limiter = Limiter(key_func=get_remote_address)
 
 app = FastAPI(title="Stock Prediction API")
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+app.include_router(auth_router)
 
 def get_db():
     db = SessionLocal()
