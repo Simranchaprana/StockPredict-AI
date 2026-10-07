@@ -157,7 +157,7 @@ export default function Dashboard() {
           </div>
           <div className="text-right hidden sm:block">
             <span className={`text-xs font-semibold px-2 py-1 rounded-full ${isMarketClosed ? 'bg-orange-100 text-orange-800' : 'bg-green-100 text-green-800'}`}>
-              {isMarketClosed ? 'Awaiting Next Open' : 'Real-Time Sync Active'}
+              {isMarketClosed ? 'Next Open: 9:15 AM IST (NSE) / 7:00 PM IST (NYSE)' : 'Real-Time Sync Active'}
             </span>
           </div>
         </div>
